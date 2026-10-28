@@ -17,6 +17,7 @@ class DatosViewModel : EcoRepository {
     var cierres=0; var envios=0; var guardados=0; var refrescos=0
     var falloCierre: ErrorApi?=null; var falloEnvio: ErrorApi?=null
     override fun puntos()=puntos
+    override fun pendientes()=registros.map { lista -> lista.count { it.pesaje.pendiente }.toLong() }
     override fun pesajes()=registros
     override fun ruta()=actual
     override fun padron()=puntos

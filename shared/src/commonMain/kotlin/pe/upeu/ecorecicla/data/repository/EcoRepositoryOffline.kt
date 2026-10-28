@@ -12,6 +12,7 @@ class EcoRepositoryOffline(private val local: BaseLocal,private val api: EcoApi,
     private val mutex=Mutex()
     private var seleccion: Long?=null
     private var fechaRutas: String?=null
+    override fun pendientes()=local.pendientes()
     override fun puntos()=local.puntos()
     override fun pesajes()=local.pesajes()
     override fun ruta()=local.ruta()

@@ -15,13 +15,15 @@ data class UiState(
     val mensaje: String?=null,val campos: Map<String,String> = emptyMap(),val reintentar: Boolean=false,val conectado: Boolean=false,
     val padron: List<PuntoAcopio> = emptyList(),val padronVisible: List<PuntoAcopio> = emptyList(),val zona: String="",
     val rutas: List<RutaResumen> = emptyList(),val rutasVisibles: List<RutaResumen> = emptyList(),val fechaRutas: String="",
-    val busquedaRuta: String="",val soloPendientes: Boolean=false,val puntosVisibles: List<PuntoAcopio> = emptyList()
+    val busquedaRuta: String="",val soloPendientes: Boolean=false,val puntosVisibles: List<PuntoAcopio> = emptyList(),
+    val pendientesSync: Long=0
 )
 
 class EcoViewModel(
     private val repo: EcoRepository,private val iniciar: IniciarSesionUseCase,private val consultar: ConsultarSesionUseCase,
     private val cerrar: CerrarSesionUseCase,private val sync: SincronizarUseCase,private val registrar: RegistrarPesajeUseCase,
-    conectividad: Flow<Boolean>,private val catalogo: CatalogoUseCases,private val filtrarRuta: FiltrarRutaUseCase=FiltrarRutaUseCase()
+    conectividad: Flow<Boolean>,private val catalogo: CatalogoUseCases,private val filtrarRuta: FiltrarRutaUseCase=FiltrarRutaUseCase(),
+    private val observarPendientes: ObservarPendientesUseCase=ObservarPendientesUseCase(repo)
 ) : ViewModel() {
     private fun inicio(sesion: Sesion?)=if(sesion!=null && "PESAJE_CREAR" !in sesion.privilegios) Pantalla.Padron else Pantalla.Ruta
     private val mutable=MutableStateFlow(UiState(sesion=consultar.actual(),pantalla=inicio(consultar.actual()),fechaRutas=catalogo.hoy()))
@@ -29,6 +31,7 @@ class EcoViewModel(
     private var ultimaOperacion: (suspend () -> Unit)?=null
     private var reintentoAlternativo: (suspend () -> Unit)?=null
     init {
+        viewModelScope.launch { observarPendientes().collect { n -> mutable.update { it.copy(pendientesSync=n) } } }
         viewModelScope.launch { consultar.observar().collect { s ->
             if(s==null && state.value.sesion!=null) mutable.update { UiState(conectado=it.conectado,fechaRutas=catalogo.hoy()) }
         } }
