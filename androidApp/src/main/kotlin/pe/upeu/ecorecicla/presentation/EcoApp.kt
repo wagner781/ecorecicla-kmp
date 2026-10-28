@@ -38,7 +38,7 @@ import java.time.ZoneId
                 if(s.cargando) LinearProgressIndicator(Modifier.fillMaxWidth())
                 s.mensaje?.let { message ->
                     Card(Modifier.fillMaxWidth().padding(vertical=8.dp),colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.primaryContainer)) {
-                        Column(Modifier.padding(12.dp)) { Text(message); if(s.reintentar && s.sesion!=null) TextButton(onClick=vm::sincronizar,enabled=!s.cargando) { Text("Reintentar") } }
+                        Column(Modifier.padding(12.dp)) { Text(message); if(s.reintentar) TextButton(onClick=vm::reintentar,enabled=!s.cargando) { Text("Reintentar") } }
                     }
                 }
                 if(s.sesion==null) Login(s,vm)

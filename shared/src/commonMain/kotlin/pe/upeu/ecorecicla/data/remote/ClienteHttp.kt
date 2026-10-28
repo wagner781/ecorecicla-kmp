@@ -27,16 +27,17 @@ fun crearCliente(engine: HttpClientEngine, config: ApiConfig, seguro: AlmacenSeg
         validateResponse { response ->
             if(response.status.value>=400) {
                 val error=try { response.body<ErrorDto>() } catch (_: Exception) { ErrorDto(status=response.status.value) }
-                if(response.status.value==401) { seguro.borrar(); alExpirar() }
-                throw mapearError(response.status.value,error)
+                val esLogin=response.call.request.url.encodedPath.endsWith("/auth/login")
+                if(response.status.value==401 && !esLogin) { seguro.borrar(); alExpirar() }
+                throw mapearError(response.status.value,error,esLogin)
             }
         }
     }
 }
 
-fun mapearError(status: Int, dto: ErrorDto): ErrorApi = when(status) {
+fun mapearError(status: Int, dto: ErrorDto, esLogin: Boolean=false): ErrorApi = when(status) {
     400 -> ErrorApi.Validacion(dto.validationErrors,dto.message)
-    401 -> ErrorApi.NoAutorizado()
+    401 -> if(esLogin) ErrorApi.CredencialesIncorrectas(dto.message) else ErrorApi.NoAutorizado()
     403 -> ErrorApi.SinPrivilegio(dto.message)
     404 -> ErrorApi.NoEncontrado(dto.message)
     409 -> ErrorApi.Conflicto(dto.message)

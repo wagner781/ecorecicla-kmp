@@ -3,6 +3,7 @@ package pe.upeu.ecorecicla.domain.model
 sealed class ErrorApi(message: String) : Exception(message) {
     class Validacion(val campos: Map<String,String>, message: String, val pesajeId: Long?=null, val puntoId: Long?=null) : ErrorApi(message)
     class NoAutorizado : ErrorApi("La sesion vencio. Inicia sesion nuevamente")
+    class CredencialesIncorrectas(message: String="Usuario o contrasena incorrectos") : ErrorApi(message)
     class SinPrivilegio(message: String) : ErrorApi(message)
     class NoEncontrado(message: String) : ErrorApi(message)
     class Conflicto(message: String) : ErrorApi(message)
