@@ -1,0 +1,181 @@
+{
+  "fechaGeneracion": "2026-10-28T17:51:39.891302-05:00",
+  "backend": "02beb2abea7a69e959258a101466b896206c1d03",
+  "android": "a22dd81fc0a8347dec7f8ab3420ad85015c4f668",
+  "pruebasBackend": [
+    {
+      "clase": "pe.upeu.ecorecicla.AdministracionTest",
+      "pruebas": 7,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.AuditorTest",
+      "pruebas": 2,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.ContratoErroresTest",
+      "pruebas": 2,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.HumedadTest",
+      "pruebas": 3,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.OperacionesTest",
+      "pruebas": 13,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.RutasGestionTest",
+      "pruebas": 5,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.SeguridadTest",
+      "pruebas": 3,
+      "fallos": 0,
+      "errores": 0
+    }
+  ],
+  "pruebasJvm": [
+    {
+      "clase": "pe.upeu.ecorecicla.AdministracionClienteTest",
+      "pruebas": 3,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.AuditorClienteTest",
+      "pruebas": 2,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.CatalogoTest",
+      "pruebas": 5,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.ClienteTest",
+      "pruebas": 4,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.ContadorPendientesTest",
+      "pruebas": 1,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.FiltroRutaTest",
+      "pruebas": 2,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.HumedadClienteTest",
+      "pruebas": 2,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.MigracionTest",
+      "pruebas": 2,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.OfflineTest",
+      "pruebas": 6,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.SesionTest",
+      "pruebas": 2,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.ViewModelTest",
+      "pruebas": 4,
+      "fallos": 0,
+      "errores": 0
+    }
+  ],
+  "pruebasAndroidDebug": [
+    {
+      "clase": "pe.upeu.ecorecicla.AdministracionClienteTest",
+      "pruebas": 3,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.AuditorClienteTest",
+      "pruebas": 2,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.CatalogoTest",
+      "pruebas": 5,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.ClienteTest",
+      "pruebas": 4,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.ContadorPendientesTest",
+      "pruebas": 1,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.FiltroRutaTest",
+      "pruebas": 2,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.HumedadClienteTest",
+      "pruebas": 2,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.OfflineTest",
+      "pruebas": 6,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.SesionTest",
+      "pruebas": 2,
+      "fallos": 0,
+      "errores": 0
+    },
+    {
+      "clase": "pe.upeu.ecorecicla.ViewModelTest",
+      "pruebas": 4,
+      "fallos": 0,
+      "errores": 0
+    }
+  ],
+  "auditorEscrituraHTTP": 403,
+  "observacion": "Capturas reales del emulador. Historial de la fecha real, sin acreditar sesiones docentes ni autorias pasadas."
+}
