@@ -107,6 +107,9 @@ import java.time.ZoneId
             s.ruta?.let { r -> Text("Ruta #${r.id} · ${s.rutas.find { it.id==r.id }?.usuario ?: "Usuario #${r.usuarioId}"}",style=MaterialTheme.typography.bodySmall) }
             if(s.sesion?.privilegios?.contains("PUNTO_GESTIONAR")==true && s.ruta?.cerrada==false) TextButton(onClick={vm.navegar(Pantalla.Asignacion(s.ruta?.id))},enabled=!s.cargando) { Text("Editar planificacion") }
             Text("Ultima sincronizacion: ${s.ruta?.ultimaSync ?: "Todavia no se sincroniza"}",style=MaterialTheme.typography.bodySmall)
+            Surface(color=MaterialTheme.colorScheme.secondaryContainer,shape=MaterialTheme.shapes.small) {
+                Text("Pendientes de sincronizar: ${s.pendientesSync}",modifier=Modifier.padding(8.dp),style=MaterialTheme.typography.labelLarge)
+            }
             Spacer(Modifier.height(12.dp))
             Button(onClick=vm::sincronizar,enabled=!s.cargando) { Text("Sincronizar") }
             if(s.sesion?.privilegios?.contains("RUTA_CERRAR")==true && s.ruta?.cerrada==false) {

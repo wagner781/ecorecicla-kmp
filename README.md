@@ -43,3 +43,5 @@ La sesion se administra mediante repositorio y casos de uso separados; `expiresA
 SC-B: usuario `auditor1`, clave `Eco2026*`, privilegios PUNTO_LEER y PESAJE_LEER. Abre Padron; consulta detalle y Perfil con indicador de acceso de consulta. No ofrece escrituras ni Administrar. Las reglas no comparan el nombre AUDITOR.
 
 SC-C: formulario y detalle de pesaje incluyen Humedad estimada (%) opcional, 0..100 con hasta dos decimales; SQLite migra de version 2 a 3 sin borrar pendientes. La cola envia y recupera el valor con el ID definitivo. No interviene en el neto. Se ejecutan 30 casos comunes y dos migraciones JVM tras este cambio.
+
+SC-D: distintivo «Pendientes de sincronizar» alimentado por COUNT observable de SQLDelight. Cuenta todos los pesajes con cambios locales; no es el numero de puntos pendientes de pesar de SC-A. El ViewModel no mantiene incrementos manuales. Suite final: 31 pruebas comunes y dos migraciones JVM; APK debug y variantes unitarias Android compiladas/verificadas.
