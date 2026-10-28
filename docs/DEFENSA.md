@@ -67,3 +67,7 @@ La ruta combina busqueda por razon social, direccion, zona o material con «Solo
 ## SC-C: humedad estimada de extremo a extremo
 
 El formulario y el detalle muestran el mismo porcentaje opcional, 0..100 con dos decimales. Vacio conserva null; un texto invalido produce error de campo. `PesajePeticionDto` envia el valor; `PesajeDto.dominio()` lo conserva y `BaseLocal` lo persiste antes de sincronizar. La migracion SQLite 2→3 agrega una columna nullable sin perder IDs provisionales ni claves. No cambia el peso neto ni se calcula descuento por humedad: esa regla no fue solicitada. HumedadClienteTest verifica guardado sin red, cuerpo HTTP, respuesta definitiva y validacion; MigracionTest conserva un pendiente antiguo. Se probaron 30 casos comunes y dos migraciones JVM.
+
+## SC-D: contador observable
+
+`cantidadPendientes` ejecuta COUNT(*) WHERE pendiente=1 en SQLite. BaseLocal transforma la consulta SQLDelight en Flow y ObservarPendientesUseCase lo entrega al ViewModel; Compose dibuja el valor, sin incrementos ni decrementos manuales. Cuenta creaciones, correcciones y anulaciones pendientes en todo el dispositivo, incluso de otra ruta. Cambiar el buscador no altera la cola. Un error de envio conserva la marca y el contador; la transaccion de sincronizacion elimina la marca al recibir la version definitiva. El conteo se recupera al reabrir la app. ContadorPendientesTest observa emisiones reales de SQLite y HumedadClienteTest comprueba 1 antes y 0 despues de sincronizar.

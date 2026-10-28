@@ -56,6 +56,9 @@ SELECT * FROM PesajeLocal ORDER BY fechaHora DESC,id DESC;
 pendientes:
 SELECT * FROM PesajeLocal WHERE pendiente=1 ORDER BY id;
 
+cantidadPendientes:
+SELECT COUNT(*) FROM PesajeLocal WHERE pendiente=1;
+
 siguienteId:
 SELECT MIN(COALESCE(MIN(id),0),0)-1 FROM PesajeLocal;
 

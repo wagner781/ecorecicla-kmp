@@ -9,6 +9,7 @@ data class FormularioPesaje(val puntoId: Long,val material: String,val pesoBruto
 data class ResumenSync(val enviados: Int,val recibidos: Int)
 interface Reloj { fun ahoraIso(): String; fun claveUnica(): String }
 interface EcoRepository {
+    fun pendientes(): Flow<Long>
     fun puntos(): Flow<List<PuntoAcopio>>
     fun pesajes(): Flow<List<Registro>>
     fun ruta(): Flow<RutaLocal?>

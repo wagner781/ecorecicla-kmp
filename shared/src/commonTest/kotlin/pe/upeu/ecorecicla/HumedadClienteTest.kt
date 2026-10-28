@@ -2,6 +2,7 @@ package pe.upeu.ecorecicla
 
 import kotlin.test.*
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.flow.first
 import io.ktor.client.engine.mock.*
 import io.ktor.http.*
 import io.ktor.http.content.TextContent
@@ -42,8 +43,10 @@ class HumedadClienteTest {
             val repo=EcoRepositoryOffline(local,EcoApi(http),seguro,reloj)
             repo.registrar(FormularioPesaje(1,"Papel",12.0,2.0,null,12.75))
             assertEquals(0,llamadas); assertEquals(12.75,local.q.pendientes().executeAsOne().humedadEstimada)
+            assertEquals(1L,repo.pendientes().first())
             repo.sincronizar()
             val fila=local.q.pesajes().executeAsOne(); assertEquals(101L,fila.id); assertEquals(12.75,fila.humedadEstimada); assertEquals(0L,fila.pendiente)
+            assertEquals(0L,repo.pendientes().first())
         } finally { http.close(); driver.close() }
     }
     @Test fun validaHumedadAntesDeGuardarSinDescartarCamposOpcionales()=runTest {

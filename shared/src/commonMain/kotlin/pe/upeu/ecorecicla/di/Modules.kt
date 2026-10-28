@@ -25,9 +25,10 @@ val domainModule=module {
     factory { IniciarSesionUseCase(get()) }; factory { ConsultarSesionUseCase(get()) }; factory { CerrarSesionUseCase(get()) }
     factory { CatalogoUseCases(get(),get()) }
     factory { FiltrarRutaUseCase() }
+    factory { ObservarPendientesUseCase(get()) }
     factory { AdministracionUseCases(get(),get()) }
 }
 val presentationModule=module {
-    factory { EcoViewModel(get(),get(),get(),get(),get(),get(),get(),get(),get()) }
+    factory { EcoViewModel(get(),get(),get(),get(),get(),get(),get(),get(),get(),get()) }
     factory { AdministracionViewModel(get(),get(),get()) }
 }
