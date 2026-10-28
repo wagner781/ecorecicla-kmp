@@ -60,6 +60,7 @@ import java.time.ZoneId
                 } }
                 if(s.sesion==null) Login(s,vm)
                 else {
+                    if(s.sesion?.soloLectura==true) Text("Acceso de consulta: puntos y pesajes",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.primary)
                     Row(Modifier.horizontalScroll(rememberScrollState())) {
                         TextButton(onClick={ vm.navegar(Pantalla.Ruta) },enabled=!s.cargando) { Text("Mi ruta") }
                         TextButton(onClick={ vm.navegar(Pantalla.Padron) },enabled=!s.cargando) { Text("Puntos") }
@@ -106,6 +107,9 @@ import java.time.ZoneId
             s.ruta?.let { r -> Text("Ruta #${r.id} · ${s.rutas.find { it.id==r.id }?.usuario ?: "Usuario #${r.usuarioId}"}",style=MaterialTheme.typography.bodySmall) }
             if(s.sesion?.privilegios?.contains("PUNTO_GESTIONAR")==true && s.ruta?.cerrada==false) TextButton(onClick={vm.navegar(Pantalla.Asignacion(s.ruta?.id))},enabled=!s.cargando) { Text("Editar planificacion") }
             Text("Ultima sincronizacion: ${s.ruta?.ultimaSync ?: "Todavia no se sincroniza"}",style=MaterialTheme.typography.bodySmall)
+            Surface(color=MaterialTheme.colorScheme.secondaryContainer,shape=MaterialTheme.shapes.small) {
+                Text("Pendientes de sincronizar: ${s.pendientesSync}",modifier=Modifier.padding(8.dp),style=MaterialTheme.typography.labelLarge)
+            }
             Spacer(Modifier.height(12.dp))
             Button(onClick=vm::sincronizar,enabled=!s.cargando) { Text("Sincronizar") }
             if(s.sesion?.privilegios?.contains("RUTA_CERRAR")==true && s.ruta?.cerrada==false) {
@@ -115,7 +119,15 @@ import java.time.ZoneId
             }
         }
         if(s.puntos.isEmpty() && !s.cargando) item { Text("Aun no hay puntos. Sincroniza con conexion para descargar tu ruta.") }
-        items(s.puntos,key={it.id}) { p ->
+        item {
+            OutlinedTextField(value=s.busquedaRuta,onValueChange=vm::buscarRuta,label={Text("Buscar en mi ruta")},singleLine=true,modifier=Modifier.fillMaxWidth())
+            Row(verticalAlignment=Alignment.CenterVertically) {
+                Switch(checked=s.soloPendientes,onCheckedChange=vm::mostrarSoloPendientes)
+                Text("Solo pendientes de pesar",modifier=Modifier.padding(start=8.dp))
+            }
+            if(s.puntos.isNotEmpty() && s.puntosVisibles.isEmpty()) Text("No hay puntos que coincidan con los filtros.")
+        }
+        items(s.puntosVisibles,key={it.id}) { p ->
             Card(onClick={vm.navegar(Pantalla.Detalle(p.id))},modifier=Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                     Text("${p.secuencia.toString().padStart(2,'0')}  ${p.razonSocial}",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
@@ -154,6 +166,7 @@ import java.time.ZoneId
                     Text("${w.material} · #${w.id}",fontWeight=FontWeight.Bold)
                     Text("Bruto ${w.pesoBruto} kg · Tara ${w.tara} kg")
                     Text(if(w.id<0) "Neto pendiente del servidor" else "Neto ${w.pesoNeto} kg")
+                    Text("Humedad estimada: ${w.humedadEstimada?.let { "$it %" } ?: "Sin estimar"}")
                     Text("${w.operario} · ${w.fechaHora}",style=MaterialTheme.typography.bodySmall)
                     if(w.pendiente) Text("Pendiente de sincronizar",color=MaterialTheme.colorScheme.primary)
                     (w.estado as? EstadoPesaje.Anulado)?.let { Text("Anulado: ${it.motivo}",color=MaterialTheme.colorScheme.error) }
@@ -180,6 +193,7 @@ import java.time.ZoneId
     var material by rememberSaveable(screen.pesajeId,screen.puntoId) { mutableStateOf(previo?.pesaje?.material ?: s.puntos.find { it.id==screen.puntoId }?.materialHabitual.orEmpty()) }
     var bruto by rememberSaveable(screen.pesajeId,screen.puntoId) { mutableStateOf(previo?.pesaje?.pesoBruto?.toString().orEmpty()) }
     var tara by rememberSaveable(screen.pesajeId,screen.puntoId) { mutableStateOf(previo?.pesaje?.tara?.toString() ?: "0") }
+    var humedad by rememberSaveable(screen.pesajeId,screen.puntoId) { mutableStateOf(previo?.pesaje?.humedadEstimada?.toString().orEmpty()) }
     var observacion by rememberSaveable(screen.pesajeId,screen.puntoId) { mutableStateOf(previo?.observacion.orEmpty()) }
     Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         TextButton(onClick={vm.navegar(Pantalla.Detalle(screen.puntoId))}) { Text("Volver al punto") }
@@ -188,8 +202,9 @@ import java.time.ZoneId
         Campo("Material",material,{material=it},s.campos["material"])
         Campo("Peso bruto (kg)",bruto,{bruto=it},s.campos["pesoBruto"],true)
         Campo("Tara (kg)",tara,{tara=it},s.campos["tara"],true)
+        Campo("Humedad estimada (%) - opcional",humedad,{humedad=it},s.campos["humedadEstimada"],true)
         Campo("Observacion",observacion,{observacion=it},s.campos["observacion"])
-        Button(onClick={ vm.guardar(FormularioPesaje(screen.puntoId,material,bruto.replace(',','.').toDoubleOrNull() ?: Double.NaN,tara.replace(',','.').toDoubleOrNull() ?: Double.NaN,observacion.ifBlank { null }),screen.pesajeId) },enabled=!s.cargando,modifier=Modifier.fillMaxWidth().height(52.dp)) { Text("Guardar pesaje") }
+        Button(onClick={ vm.guardar(FormularioPesaje(screen.puntoId,material,bruto.replace(',','.').toDoubleOrNull() ?: Double.NaN,tara.replace(',','.').toDoubleOrNull() ?: Double.NaN,observacion.ifBlank { null },if(humedad.isBlank()) null else humedad.replace(',','.').toDoubleOrNull() ?: Double.NaN),screen.pesajeId) },enabled=!s.cargando,modifier=Modifier.fillMaxWidth().height(52.dp)) { Text("Guardar pesaje") }
     }
 }
 

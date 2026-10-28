@@ -5,10 +5,11 @@ import pe.upeu.ecorecicla.domain.model.*
 
 data class RutaLocal(val id: Long,val fecha: String,val cerrada: Boolean,val ultimaSync: String,val usuarioId: Long=0)
 data class Registro(val pesaje: Pesaje,val rutaId: Long,val clave: String,val operacion: String,val observacion: String?,val error: String?)
-data class FormularioPesaje(val puntoId: Long,val material: String,val pesoBruto: Double,val tara: Double,val observacion: String?)
+data class FormularioPesaje(val puntoId: Long,val material: String,val pesoBruto: Double,val tara: Double,val observacion: String?,val humedadEstimada: Double?=null)
 data class ResumenSync(val enviados: Int,val recibidos: Int)
 interface Reloj { fun ahoraIso(): String; fun claveUnica(): String }
 interface EcoRepository {
+    fun pendientes(): Flow<Long>
     fun puntos(): Flow<List<PuntoAcopio>>
     fun pesajes(): Flow<List<Registro>>
     fun ruta(): Flow<RutaLocal?>

@@ -1,0 +1,42 @@
+*   a22dd81 (HEAD -> docs/evidencias-parte2, origin/develop, develop) Merge pull request #18 from wagner781/sc-d-qquerar
+|\  
+| * 6248737 (origin/sc-d-qquerar, sc-d-qquerar) docs(sc-d): registrar conteo restaurado y humedad sincronizada en Android
+| * deb9979 feat(sc-d): mostrar distintivo reactivo de pendientes de sincronizar
+| * 15bb505 test(sc-d): comprobar emisiones SQL y conteo tras sincronizar
+| * 46c5e65 feat(sc-d): observar cantidad pendiente mediante consulta SQLite
+|/  
+*   39979e7 Merge pull request #17 from wagner781/sc-c-qquerar
+|\  
+| * 0933e60 (origin/sc-c-qquerar, sc-c-qquerar) feat(sc-c): mostrar humedad validada en formulario y detalle
+| * 76e7fcb test(sc-c): probar humedad offline envio y migracion sin perdida
+| * 2143226 feat(sc-c): conservar humedad en dominio DTO SQLite y cola offline
+|/  
+*   da0b274 Merge pull request #16 from wagner781/sc-b-qquerar
+|\  
+| * e100896 (origin/sc-b-qquerar, sc-b-qquerar) docs(sc-b): demostrar acceso del auditor y filtros offline
+| * 4d11dc9 test(sc-b): impedir cola de escrituras y abrir padron para auditor
+| * cca028f feat(sc-b): identificar acceso de consulta mediante privilegios
+|/  
+*   c956a44 Merge pull request #15 from wagner781/sc-a-qquerar
+|\  
+| * f8264a1 (origin/sc-a-qquerar, sc-a-qquerar) feat(sc-a): ofrecer buscador y selector de pendientes en la ruta
+| * 989f1be test(sc-a): verificar filtros combinados y reaccion sin conexion
+| * 3b0768f feat(sc-a): combinar busqueda y pendientes desde el caso de uso
+|/  
+| *   eff6d08 (tag: v1.1-parte1, origin/main, origin/HEAD, main) Merge pull request #14 from wagner781/develop
+| |\  
+| |/  
+|/|   
+* |   fb1fa30 Merge pull request #13 from wagner781/feature/administracion-android-parte1
+|\ \  
+| * | 120ced1 (origin/feature/administracion-android-parte1, feature/administracion-android-parte1) docs(parte1): registrar gestion y supervision verificadas en Android
+| * | e8089fc fix(supervision): conservar el cierre en ambas vistas locales
+| * | 161e1f4 fix(sesion): conservar el vencimiento exacto comunicado por el servidor
+| * | 3568019 feat(planificacion): gestionar roles y asignar puntos en orden de visita
+| * | 8d233c4 feat(usuarios): administrar cuentas y estado de acceso desde Android
+| * | 437f22c feat(padron): crear editar y eliminar puntos desde Android
+| * | 6c9a897 feat(gestion): traducir contratos administrativos y validar privilegios
+|/ /  
+* |   f976832 Integrar padrón local, supervisión y regresiones de errores
+|\ \  
+| * | 52afdc9 (origin/feature/catalogo-supervision-parte1, feature/catalogo-supervision-parte1) test(presentacion): verificar reintento sin duplicados y refresco ante 404

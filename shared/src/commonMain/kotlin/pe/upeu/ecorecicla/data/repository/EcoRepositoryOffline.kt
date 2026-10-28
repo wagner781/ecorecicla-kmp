@@ -12,6 +12,7 @@ class EcoRepositoryOffline(private val local: BaseLocal,private val api: EcoApi,
     private val mutex=Mutex()
     private var seleccion: Long?=null
     private var fechaRutas: String?=null
+    override fun pendientes()=local.pendientes()
     override fun puntos()=local.puntos()
     override fun pesajes()=local.pesajes()
     override fun ruta()=local.ruta()
@@ -25,6 +26,9 @@ class EcoRepositoryOffline(private val local: BaseLocal,private val api: EcoApi,
         val anterior=id?.let { actual -> local.q.pesajes().executeAsList().find { it.id==actual }?.dominio() }
         if(r.cerrada==1L && (anterior==null || anterior.rutaId==r.id)) throw ErrorApi.Conflicto("La ruta ya esta cerrada")
         val errores=buildMap {
+            formulario.humedadEstimada?.let { h ->
+                if(!h.isFinite() || h<0 || h>100 || kotlin.math.round(h*100)/100!=h) put("humedadEstimada","Usa un porcentaje de 0 a 100 con hasta 2 decimales")
+            }
             if(formulario.material.isBlank()) put("material","Indica un material")
             if(!formulario.pesoBruto.isFinite() || formulario.pesoBruto<=0) put("pesoBruto","Debe ser mayor que cero")
             if(!formulario.tara.isFinite() || formulario.tara<0 || formulario.tara>=formulario.pesoBruto) put("tara","Debe ser no negativa y menor que el bruto")
@@ -34,7 +38,7 @@ class EcoRepositoryOffline(private val local: BaseLocal,private val api: EcoApi,
             val previo=anterior
             if(id!=null && previo==null) throw ErrorApi.NoEncontrado("Pesaje inexistente")
             val provisional=id ?: requireNotNull(local.q.siguienteId().executeAsOne().expr)
-            val p=Pesaje(provisional,formulario.puntoId,previo?.pesaje?.fechaHora ?: reloj.ahoraIso(),formulario.material,formulario.pesoBruto,formulario.tara,previo?.pesaje?.pesoNeto ?: 0.0,previo?.pesaje?.operario ?: sesion().usuario,EstadoPesaje.Registrado,true)
+            val p=Pesaje(provisional,formulario.puntoId,previo?.pesaje?.fechaHora ?: reloj.ahoraIso(),formulario.material,formulario.pesoBruto,formulario.tara,previo?.pesaje?.pesoNeto ?: 0.0,previo?.pesaje?.operario ?: sesion().usuario,EstadoPesaje.Registrado,true,formulario.humedadEstimada)
             local.guardar(Registro(p,previo?.rutaId ?: r.id,previo?.clave ?: reloj.claveUnica(),if(provisional<0) "CREAR" else "EDITAR",formulario.observacion,null))
         }
     }
@@ -51,7 +55,7 @@ class EcoRepositoryOffline(private val local: BaseLocal,private val api: EcoApi,
         for (fila in local.q.pendientes().executeAsList()) {
             val p=fila.dominio()
             try {
-                val body=PesajePeticionDto(p.rutaId,p.pesaje.puntoId,p.pesaje.material,p.pesaje.pesoBruto,p.pesaje.tara,p.observacion,p.clave)
+                val body=PesajePeticionDto(p.rutaId,p.pesaje.puntoId,p.pesaje.material,p.pesaje.pesoBruto,p.pesaje.tara,p.observacion,p.clave,p.pesaje.humedadEstimada)
                 when(p.operacion) {
                     "CREAR" -> {
                         val definitivo=api.crear(body)

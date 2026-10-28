@@ -56,3 +56,18 @@ Las capturas incluidas son reales de esta sesión. El historial no acredita desa
 El administrador abre Padron, Usuarios, Roles o Asignacion. `AdministracionViewModel` usa casos de uso y repositorio propios; no recibe hashes ni decide por nombre de rol. Las selecciones de roles y privilegios provienen del API. Una asignacion admite solo usuarios activos con PESAJE_CREAR y conserva el orden de seleccion de los puntos. El servicio impide eliminar puntos referenciados, roles en uso y el ultimo administrador activo.
 
 El supervisor selecciona rutas de operaciones por fecha, registra motivos de omision y solicita cierre. La respuesta 409 conserva la ruta abierta y explica cuantos puntos faltan. Tras el cierre se actualizan atomicamente el detalle y el listado local. `docs/evidencias/parte1` registra pruebas reales, incluidas altas, modificaciones y bajas de gestion. Las cuentas QA creadas por las pruebas quedan desactivadas.
+## SC-A: busqueda y pendientes
+
+La ruta combina busqueda por razon social, direccion, zona o material con «Solo pendientes de pesar». `FiltrarRutaUseCase` conserva el orden planificado y recibe las filas observables de SQLite: funciona sin red y reacciona a un pesaje local. Una omision justificada resuelve la visita y queda fuera del filtro, aunque siga visible al desactivarlo. El composable solo dibuja `puntosVisibles` y emite eventos. Pruebas: FiltroRutaTest cubre combinacion, orden, vacio y cambio del cache con conectividad falsa.
+
+## SC-B: acceso de consulta
+
+`auditor1 / Eco2026*` entra al padron y consulta puntos, pesajes y perfil. No tiene creacion, correccion, anulacion, cierre ni gestion. La interfaz y los casos de uso dependen de privilegios; cambiar el nombre del rol no cambia la autorizacion. `AuditorClienteTest` garantiza que no puede encolar escrituras ni llamar al cierre y conserva la sesion ante rechazo. El servidor repite la autorizacion. Captura real: docs/evidencias/parte2/sc-b-auditor.png.
+
+## SC-C: humedad estimada de extremo a extremo
+
+El formulario y el detalle muestran el mismo porcentaje opcional, 0..100 con dos decimales. Vacio conserva null; un texto invalido produce error de campo. `PesajePeticionDto` envia el valor; `PesajeDto.dominio()` lo conserva y `BaseLocal` lo persiste antes de sincronizar. La migracion SQLite 2→3 agrega una columna nullable sin perder IDs provisionales ni claves. No cambia el peso neto ni se calcula descuento por humedad: esa regla no fue solicitada. HumedadClienteTest verifica guardado sin red, cuerpo HTTP, respuesta definitiva y validacion; MigracionTest conserva un pendiente antiguo. Se probaron 30 casos comunes y dos migraciones JVM.
+
+## SC-D: contador observable
+
+`cantidadPendientes` ejecuta COUNT(*) WHERE pendiente=1 en SQLite. BaseLocal transforma la consulta SQLDelight en Flow y ObservarPendientesUseCase lo entrega al ViewModel; Compose dibuja el valor, sin incrementos ni decrementos manuales. Cuenta creaciones, correcciones y anulaciones pendientes en todo el dispositivo, incluso de otra ruta. Cambiar el buscador no altera la cola. Un error de envio conserva la marca y el contador; la transaccion de sincronizacion elimina la marca al recibir la version definitiva. El conteo se recupera al reabrir la app. ContadorPendientesTest observa emisiones reales de SQLite y HumedadClienteTest comprueba 1 antes y 0 despues de sincronizar.

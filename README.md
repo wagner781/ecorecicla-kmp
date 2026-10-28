@@ -14,7 +14,7 @@ El historial registra trabajo real de la sesión actual, sin fechas retroactivas
 2. Abre esta carpeta en Android Studio. Instala JDK 21 y SDK Android 36; configura `local.properties` con tu ruta al SDK (no se versiona).
 3. Ejecuta `./gradlew :androidApp:assembleDebug :shared:allTests` (en Windows, `gradlew.bat`).
 4. Ejecuta el módulo androidApp en el emulador, o instala `androidApp/build/outputs/apk/debug/androidApp-debug.apk` con `adb install -r`.
-5. Entra con `operario1`, `operario2`, `supervisor1` o `admin` y contraseña `Eco2026*`. Operario y supervisor tienen ruta del día; el administrador abre el padron sin necesitar ruta propia y gestiona puntos, usuarios, roles y asignaciones. No registra pesajes.
+5. Entra con `operario1`, `operario2`, `supervisor1`, `admin` o `auditor1` y contraseña `Eco2026*`. operario1 y supervisor1 tienen ruta del dia en las semillas; el administrador abre el padron sin necesitar ruta propia y gestiona puntos, usuarios, roles y asignaciones. No registra pesajes.
 
 La URL central está en BuildConfig, inyectada como ApiConfig. Por defecto es `http://10.0.2.2:8080/api/v1/`, acceso del emulador al equipo anfitrión. Para un dispositivo físico usa `-PecoApiUrl=http://IP-LAN-DEL-PC:8080/api/v1/` al compilar, y permite el puerto en tu firewall si lo necesitas. HTTP solo está habilitado en el manifiesto debug; release requiere un backend HTTPS y `-PecoApiUrl=https://.../api/v1/`. No publiques credenciales ni tokens.
 
@@ -32,10 +32,21 @@ Operario: lectura, creación, corrección propia del día. Supervisor: esas capa
 
 ## Pruebas y evidencias
 
-`./gradlew :shared:allTests` ejecuta las pruebas commonTest (24 casos comunes y una prueba JVM de migracion en el cierre de Parte I) usando MockEngine y SQLite en memoria en JVM y variantes unitarias Android. Informe JVM: `shared/build/reports/tests/jvmTest/index.html`; Android: `shared/build/reports/tests/testDebugUnitTest/index.html`. La CI además genera un APK descargable.
+`./gradlew :shared:allTests` ejecuta las pruebas commonTest (31 casos comunes y dos pruebas JVM de migracion en la entrega actual) usando MockEngine y SQLite en memoria en JVM y variantes unitarias Android. Informe JVM: `shared/build/reports/tests/jvmTest/index.html`; Android: `shared/build/reports/tests/testDebugUnitTest/index.html`. La CI además genera un APK descargable.
 
 `docs/evidencias/` contiene capturas reales de login, ruta, modo avión e ID definitivo después de sincronizar. [Guía de defensa](docs/DEFENSA.md): recorrido de los datos, seguridad, sincronización, decisiones y pasos de demostración. El cierre de sesión advierte que elimina también cambios sin enviar para dejar limpio el equipo compartido.
 
 Git: ramas `main`, `develop` y `feature/...`. Bootstrap compilable como primer commit, PR hacia develop con merge commit y luego fusión de develop a main. No se falsifican sesiones pasadas. La Parte II se implementa por peticion del usuario en cuatro ramas SC. Este historial documenta trabajo real; no acredita una asignacion docente ni sesiones pasadas.
 
 La sesion se administra mediante repositorio y casos de uso separados; `expiresAt` conserva el vencimiento firmado. Los cambios de rol invalidan tokens anteriores. Un 404 refresca el cache sin subir pendientes ni reintentar la escritura. La migracion SQLite 1→2 conserva la ruta anterior y agrega padron y rutas consultables.
+
+SC-B: usuario `auditor1`, clave `Eco2026*`, privilegios PUNTO_LEER y PESAJE_LEER. Abre Padron; consulta detalle y Perfil con indicador de acceso de consulta. No ofrece escrituras ni Administrar. Las reglas no comparan el nombre AUDITOR.
+
+SC-C: formulario y detalle de pesaje incluyen Humedad estimada (%) opcional, 0..100 con hasta dos decimales; SQLite migra de version 2 a 3 sin borrar pendientes. La cola envia y recupera el valor con el ID definitivo. No interviene en el neto. Se ejecutan 30 casos comunes y dos migraciones JVM tras este cambio.
+
+SC-D: distintivo «Pendientes de sincronizar» alimentado por COUNT observable de SQLDelight. Cuenta todos los pesajes con cambios locales; no es el numero de puntos pendientes de pesar de SC-A. El ViewModel no mantiene incrementos manuales. Suite final: 31 pruebas comunes y dos migraciones JVM; APK debug y variantes unitarias Android compiladas/verificadas.
+
+
+SC-A: buscador por razon social, direccion, zona o material combinado con Solo pendientes de pesar. La lista sale de FiltrarRutaUseCase sobre SQLite y conserva el orden de visita; funciona en modo avion. Las omisiones justificadas quedan resueltas y fuera del filtro.
+
+Entrega actual: `v1.2.1-unidad2`; punto previo a las SC: `v1.1-parte1`. [Informe con capturas y pruebas](docs/evidencias/Evidencias-EcoRecicla-Parte-I-y-II.pdf). [Explicacion de las cuatro SC](docs/PARTE_II.md). No se modifica la etiqueta inicial v1.0-unidad2.
