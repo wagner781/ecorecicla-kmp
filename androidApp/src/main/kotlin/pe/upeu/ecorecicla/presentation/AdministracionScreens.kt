@@ -19,11 +19,16 @@ import pe.upeu.ecorecicla.presentation.navigation.Pantalla
         is Pantalla.PuntoFormulario -> PuntoFormulario(s,a,p.id,vm,admin)
         Pantalla.Usuarios -> UsuariosScreen(s,a,vm,admin)
         is Pantalla.UsuarioFormulario -> UsuarioFormularioScreen(s,a,p.id,vm,admin)
+        Pantalla.Roles -> RolesScreen(s,a,vm,admin)
+        is Pantalla.RolFormulario -> RolFormularioScreen(s,a,p.nombre,vm,admin)
+        is Pantalla.Asignacion -> AsignacionScreen(s,a,p.id,vm,admin)
         else -> Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             Text("Administracion",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
             Text("Mantiene el padron y la planificacion. Este privilegio no permite registrar, corregir ni anular pesajes.")
             Button(onClick={admin.limpiarMensaje();vm.navegar(Pantalla.PuntoFormulario())},enabled=!s.cargando && s.conectado) { Text("Nuevo punto de acopio") }
             Button(onClick={admin.limpiarMensaje();vm.navegar(Pantalla.Usuarios)},enabled=!s.cargando) { Text("Usuarios") }
+            Button(onClick={admin.limpiarMensaje();vm.navegar(Pantalla.Roles)},enabled=!s.cargando) { Text("Roles y privilegios") }
+            Button(onClick={admin.limpiarMensaje();vm.navegar(Pantalla.Asignacion())},enabled=!s.cargando && s.conectado) { Text("Asignar ruta") }
             OutlinedButton(onClick={vm.navegar(Pantalla.Rutas)},enabled=!s.cargando) { Text("Ver rutas") }
         }
     }

@@ -196,7 +196,8 @@ import java.time.ZoneId
     var confirmar by remember { mutableStateOf(false) }
     Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         Text("Tu perfil",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
-        Text(s.sesion?.usuario.orEmpty(),style=MaterialTheme.typography.titleLarge)
+        Text(s.sesion?.nombre.orEmpty(),style=MaterialTheme.typography.titleLarge)
+        Text("Usuario: ${s.sesion?.usuario.orEmpty()}")
         Text(s.sesion?.rol.orEmpty())
         Text("Privilegios",fontWeight=FontWeight.Bold)
         s.sesion?.privilegios?.sorted()?.forEach { Text(it) }

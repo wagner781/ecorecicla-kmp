@@ -4,6 +4,7 @@ import pe.upeu.ecorecicla.domain.model.*
 import pe.upeu.ecorecicla.domain.repository.*
 
 class AdministracionUseCases(private val admin: AdministracionRepository,private val sesiones: SesionRepository) {
+    fun asignables(usuarios: List<UsuarioGestion>)=usuarios.filter { it.activo && "PESAJE_CREAR" in it.privilegios }
     private fun autorizar() {
         val s=sesiones.actual() ?: throw ErrorApi.NoAutorizado()
         if("PUNTO_GESTIONAR" !in s.privilegios) throw ErrorApi.SinPrivilegio("No posee permiso de administracion")

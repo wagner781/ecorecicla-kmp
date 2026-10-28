@@ -9,7 +9,7 @@ import pe.upeu.ecorecicla.domain.repository.*
 import pe.upeu.ecorecicla.domain.usecase.*
 import pe.upeu.ecorecicla.presentation.navigation.Pantalla
 
-data class AdminUiState(val usuarios: List<UsuarioGestion> = emptyList(),val roles: List<RolGestion> = emptyList(),val privilegios: List<String> = emptyList(),
+data class AdminUiState(val usuarios: List<UsuarioGestion> = emptyList(),val roles: List<RolGestion> = emptyList(),val privilegios: List<String> = emptyList(),val asignables: List<UsuarioGestion> = emptyList(),
     val cargando: Boolean=false,val mensaje: String?=null,val campos: Map<String,String> = emptyMap(),val reintentar: Boolean=false,
     val destino: Pantalla?=null,val fechaDestino: String?=null,val cargado: Boolean=false)
 
@@ -23,7 +23,7 @@ class AdministracionViewModel(private val casos: AdministracionUseCases,private 
     fun limpiarMensaje() { mutable.update { it.copy(mensaje=null,campos=emptyMap(),reintentar=false) } }
     fun consumirDestino() { mutable.update { it.copy(destino=null,fechaDestino=null) } }
     fun reintentar() { ultima?.let { ejecutar(it) } }
-    private suspend fun maestros() { val m=casos.maestros(); mutable.update { it.copy(usuarios=m.usuarios,roles=m.roles,privilegios=m.privilegios,cargado=true) } }
+    private suspend fun maestros() { val m=casos.maestros(); mutable.update { it.copy(usuarios=m.usuarios,roles=m.roles,privilegios=m.privilegios,asignables=casos.asignables(m.usuarios),cargado=true) } }
     fun cargar(forzar: Boolean=false) { if(!state.value.cargado || forzar) ejecutar { maestros() } }
     private fun ejecutar(block: suspend () -> Unit) {
         if(state.value.cargando) return
