@@ -63,3 +63,7 @@ La ruta combina busqueda por razon social, direccion, zona o material con «Solo
 ## SC-B: acceso de consulta
 
 `auditor1 / Eco2026*` entra al padron y consulta puntos, pesajes y perfil. No tiene creacion, correccion, anulacion, cierre ni gestion. La interfaz y los casos de uso dependen de privilegios; cambiar el nombre del rol no cambia la autorizacion. `AuditorClienteTest` garantiza que no puede encolar escrituras ni llamar al cierre y conserva la sesion ante rechazo. El servidor repite la autorizacion. Captura real: docs/evidencias/parte2/sc-b-auditor.png.
+
+## SC-C: humedad estimada de extremo a extremo
+
+El formulario y el detalle muestran el mismo porcentaje opcional, 0..100 con dos decimales. Vacio conserva null; un texto invalido produce error de campo. `PesajePeticionDto` envia el valor; `PesajeDto.dominio()` lo conserva y `BaseLocal` lo persiste antes de sincronizar. La migracion SQLite 2→3 agrega una columna nullable sin perder IDs provisionales ni claves. No cambia el peso neto ni se calcula descuento por humedad: esa regla no fue solicitada. HumedadClienteTest verifica guardado sin red, cuerpo HTTP, respuesta definitiva y validacion; MigracionTest conserva un pendiente antiguo. Se probaron 30 casos comunes y dos migraciones JVM.
