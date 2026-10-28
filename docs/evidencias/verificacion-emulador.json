@@ -1,0 +1,16 @@
+{
+  "prueba": "Registro offline tras reinicio y reconexion",
+  "idProvisionalObservado": -1,
+  "filasLocales": [
+    [
+      17,
+      4,
+      30.0,
+      0.0,
+      30.0,
+      0
+    ]
+  ],
+  "sesionCifradaSinTokenEnClaro": true,
+  "cierreSesionBorraTokenYCache": true
+}

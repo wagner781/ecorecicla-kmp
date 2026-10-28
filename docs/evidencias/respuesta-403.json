@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-10-28T14:53:28.579062600",
+  "status": 403,
+  "error": "Forbidden",
+  "message": "No posee el privilegio requerido",
+  "path": "/api/v1/pesajes/17",
+  "validationErrors": {}
+}
