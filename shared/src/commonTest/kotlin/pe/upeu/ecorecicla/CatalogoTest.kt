@@ -91,4 +91,16 @@ class CatalogoTest {
             assertEquals(1L,local.q.ruta().executeAsOne().id)
         } finally { http.close(); driver.close() }
     }
+    @Test fun cierreActualizaDetalleYListaLocalDeRutasSinPerderPropietario()=runTest {
+        val driver=driverMemoria(); val local=BaseLocal(EcoDatabase(driver))
+        local.q.guardarRuta(1,"2026-10-28",0,""); local.q.asignarUsuarioRuta(7,1)
+        local.q.guardarRutaDisponible(1,"2026-10-28",7,"operario1",0)
+        val seguro=SeguroMemoria().apply { guardar(Sesion("jwt","supervisor1","SUPERVISOR",setOf("RUTA_CERRAR")),3600) }
+        val http=crearCliente(MockEngine { respond("""{"id":1,"fecha":"2026-10-28","usuarioId":7,"cerrada":true,"puntos":[]}""",HttpStatusCode.OK,headersOf(HttpHeaders.ContentType,"application/json")) },ApiConfig("https://eco.test/api/v1/"),seguro)
+        try {
+            EcoRepositoryOffline(local,EcoApi(http),seguro,reloj).cerrarRuta()
+            assertEquals(1L,local.q.ruta().executeAsOne().cerrada); assertEquals(7L,local.q.ruta().executeAsOne().usuarioId)
+            assertEquals(1L,local.q.rutasDisponibles().executeAsOne().cerrada)
+        } finally { http.close(); driver.close() }
+    }
 }

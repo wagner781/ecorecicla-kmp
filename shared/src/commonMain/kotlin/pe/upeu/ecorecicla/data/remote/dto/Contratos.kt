@@ -4,8 +4,8 @@ import kotlinx.serialization.Serializable
 import pe.upeu.ecorecicla.domain.model.*
 
 @Serializable data class LoginDto(val usuario: String,val password: String)
-@Serializable data class SesionDto(val token: String,val usuario: String,val nombre: String,val rol: String,val privilegios: Set<String>,val expiresIn: Long=3600,val id: Long=0) {
-    fun dominio()=Sesion(token,usuario,rol,privilegios,id,nombre)
+@Serializable data class SesionDto(val token: String,val usuario: String,val nombre: String,val rol: String,val privilegios: Set<String>,val expiresIn: Long=3600,val id: Long=0,val expiresAt: Long?=null) {
+    fun dominio()=Sesion(token,usuario,rol,privilegios,id,nombre,expiresAt)
 }
 @Serializable data class UsuarioDto(val id: Long,val usuario: String,val nombre: String,val rol: String,val privilegios: Set<String>)
 @Serializable data class PaginaDto<T>(val contenido: List<T>,val pagina: Int,val tamanio: Int,val totalElementos: Long,val totalPaginas: Int,val ultima: Boolean)

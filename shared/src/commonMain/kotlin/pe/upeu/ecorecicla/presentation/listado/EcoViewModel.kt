@@ -117,6 +117,7 @@ class EcoViewModel(
         mutable.update { it.copy(fechaRutas=fecha,rutasVisibles=catalogo.porFecha(it.rutas,fecha)) }
     }
     fun seleccionarRuta(id: Long)=ejecutar { catalogo.seleccionar(id); mutable.update { it.copy(pantalla=Pantalla.Ruta,mensaje="Ruta seleccionada") } }
+    fun abrirRutasGuardadas(fecha: String) { mutable.update { it.copy(pantalla=Pantalla.Rutas,fechaRutas=fecha,rutasVisibles=catalogo.porFecha(it.rutas,fecha)) } }
     fun perfil()=ejecutar {
         mutable.update { it.copy(pantalla=Pantalla.Perfil) }
         if(state.value.conectado) { val session=consultar(); mutable.update { it.copy(sesion=session) } }

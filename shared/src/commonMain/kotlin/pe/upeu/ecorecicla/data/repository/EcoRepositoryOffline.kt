@@ -118,7 +118,8 @@ class EcoRepositoryOffline(private val local: BaseLocal,private val api: EcoApi,
         privilegio("RUTA_CERRAR")
         if(local.q.pendientes().executeAsList().isNotEmpty()) throw ErrorApi.Conflicto("Sincroniza los pesajes antes de cerrar")
         val r=local.q.ruta().executeAsOneOrNull() ?: throw ErrorApi.NoEncontrado("No hay ruta")
-        api.cerrar(r.id); local.q.cerrarRuta(r.id)
+        api.cerrar(r.id)
+        local.db.transaction { local.q.cerrarRuta(r.id); local.q.cerrarRutaDisponible(r.id) }
         Unit
     }
     override suspend fun omitir(punto: Long,motivo: String) = mutex.withLock {

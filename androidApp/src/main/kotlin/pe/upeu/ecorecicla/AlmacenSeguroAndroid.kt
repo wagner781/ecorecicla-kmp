@@ -25,7 +25,7 @@ class AlmacenSeguroAndroid(context: Context) : AlmacenSeguro {
         }.generateKey()
     }
     override fun guardar(sesion: Sesion,expiresIn: Long) {
-        val json=JSONObject().put("token",sesion.token).put("usuario",sesion.usuario).put("nombre",sesion.nombre).put("id",sesion.id).put("rol",sesion.rol).put("privilegios",JSONArray(sesion.privilegios.toList())).put("expires",System.currentTimeMillis()+expiresIn*1000)
+        val json=JSONObject().put("token",sesion.token).put("usuario",sesion.usuario).put("nombre",sesion.nombre).put("id",sesion.id).put("rol",sesion.rol).put("privilegios",JSONArray(sesion.privilegios.toList())).put("expires",sesion.expiresAt?.times(1000) ?: (System.currentTimeMillis()+expiresIn*1000))
         val cipher=Cipher.getInstance("AES/GCM/NoPadding").apply { init(Cipher.ENCRYPT_MODE,clave()) }
         val encrypted=cipher.doFinal(json.toString().toByteArray(Charsets.UTF_8))
         check(prefs.edit().putString("iv",Base64.encodeToString(cipher.iv,Base64.NO_WRAP)).putString("datos",Base64.encodeToString(encrypted,Base64.NO_WRAP)).commit())
@@ -37,7 +37,7 @@ class AlmacenSeguroAndroid(context: Context) : AlmacenSeguro {
             val cipher=Cipher.getInstance("AES/GCM/NoPadding").apply { init(Cipher.DECRYPT_MODE,clave(),GCMParameterSpec(128,iv)) }
             val json=JSONObject(String(cipher.doFinal(Base64.decode(data,Base64.NO_WRAP)),Charsets.UTF_8))
             if(json.getLong("expires")<=System.currentTimeMillis()) { borrar(); null }
-            else { val p=json.getJSONArray("privilegios"); Sesion(json.getString("token"),json.getString("usuario"),json.getString("rol"),(0 until p.length()).map { p.getString(it) }.toSet(),json.optLong("id",0),json.optString("nombre",json.getString("usuario"))) }
+            else { val p=json.getJSONArray("privilegios"); Sesion(json.getString("token"),json.getString("usuario"),json.getString("rol"),(0 until p.length()).map { p.getString(it) }.toSet(),json.optLong("id",0),json.optString("nombre",json.getString("usuario")),json.getLong("expires")/1000) }
         } catch (_: Exception) { borrar(); null }
     }
     override fun borrar() { check(prefs.edit().clear().commit()) }

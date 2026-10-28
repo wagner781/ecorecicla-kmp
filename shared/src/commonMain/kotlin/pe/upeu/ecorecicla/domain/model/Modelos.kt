@@ -6,4 +6,4 @@ sealed interface EstadoPesaje {
     data class Anulado(val motivo: String) : EstadoPesaje
 }
 data class Pesaje(val id: Long, val puntoId: Long, val fechaHora: String, val material: String, val pesoBruto: Double, val tara: Double, val pesoNeto: Double, val operario: String, val estado: EstadoPesaje, val pendiente: Boolean)
-data class Sesion(val token: String, val usuario: String, val rol: String, val privilegios: Set<String>,val id: Long=0,val nombre: String=usuario)
+data class Sesion(val token: String, val usuario: String, val rol: String, val privilegios: Set<String>,val id: Long=0,val nombre: String=usuario,val expiresAt: Long?=null)

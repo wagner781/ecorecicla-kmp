@@ -111,3 +111,6 @@ DELETE FROM RutaDisponible WHERE fecha=?;
 
 borrarRutasDisponibles:
 DELETE FROM RutaDisponible;
+
+cerrarRutaDisponible:
+UPDATE RutaDisponible SET cerrada=1 WHERE id=?;
