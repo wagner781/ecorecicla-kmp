@@ -44,7 +44,9 @@ class OfflineTest {
             eventos.add("${req.method.value} ${req.url.encodedPath}")
             val body=when {
                 req.method==HttpMethod.Post -> definitivo
-                req.url.encodedPath.endsWith("rutas/dia") -> """{"id":1,"fecha":"2026-10-28","usuarioId":1,"cerrada":false,"puntos":[{"id":1,"razonSocial":"Empresa","direccion":"Direccion","zona":"Norte","materialHabitual":"Papel","secuencia":1,"atendido":true}]}"""
+                req.url.encodedPath.endsWith("/puntos") -> """{"contenido":[{"id":1,"razonSocial":"Empresa","direccion":"Direccion","zona":"Norte","materialHabitual":"Papel"}],"pagina":0,"tamanio":100,"totalElementos":1,"totalPaginas":1,"ultima":true}"""
+                req.url.encodedPath.endsWith("/rutas") -> """{"contenido":[{"id":1,"fecha":"2026-10-28","usuarioId":1,"usuario":"operario1","cerrada":false}],"pagina":0,"tamanio":100,"totalElementos":1,"totalPaginas":1,"ultima":true}"""
+                req.url.encodedPath.endsWith("rutas/1") || req.url.encodedPath.endsWith("rutas/dia") -> """{"id":1,"fecha":"2026-10-28","usuarioId":1,"cerrada":false,"puntos":[{"id":1,"razonSocial":"Empresa","direccion":"Direccion","zona":"Norte","materialHabitual":"Papel","secuencia":1,"atendido":true}]}"""
                 else -> """{"contenido":[$definitivo],"pagina":0,"tamanio":100,"totalElementos":1,"totalPaginas":1,"ultima":true}"""
             }
             respond(body,if(req.method==HttpMethod.Post) HttpStatusCode.Created else HttpStatusCode.OK,headersOf(HttpHeaders.ContentType,"application/json"))
@@ -53,7 +55,7 @@ class OfflineTest {
         try {
             repo.registrar(FormularioPesaje(1,"Papel",12.0,2.0,null))
             assertEquals(ResumenSync(1,1),repo.sincronizar())
-            assertEquals(listOf("POST /api/v1/pesajes","GET /api/v1/rutas/dia","GET /api/v1/puntos/1/pesajes"),eventos)
+            assertEquals(listOf("POST /api/v1/pesajes","GET /api/v1/puntos","GET /api/v1/rutas/1","GET /api/v1/rutas","GET /api/v1/puntos/1/pesajes"),eventos)
             assertEquals(101L,local.q.pesajes().executeAsOne().id); assertTrue(local.q.pendientes().executeAsList().isEmpty())
             repo.sincronizar(); assertEquals(1,local.q.pesajes().executeAsList().size)
             repo.registrar(FormularioPesaje(1,"Metal",15.0,1.0,null)); assertEquals(-1L,local.q.pendientes().executeAsOne().id)

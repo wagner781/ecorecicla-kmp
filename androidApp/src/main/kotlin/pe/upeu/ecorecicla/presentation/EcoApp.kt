@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -22,11 +23,24 @@ import pe.upeu.ecorecicla.presentation.navigation.Pantalla
 import pe.upeu.ecorecicla.presentation.theme.EcoTheme
 import pe.upeu.ecorecicla.domain.model.*
 import pe.upeu.ecorecicla.domain.repository.*
+import pe.upeu.ecorecicla.presentation.administracion.AdministracionViewModel
 import java.time.LocalDate
 import java.time.ZoneId
 
-@Composable fun EcoApp(vm: EcoViewModel) {
-    val s by vm.state.collectAsStateWithLifecycle()
+@Composable fun EcoApp(vm: EcoViewModel,admin: AdministracionViewModel) {
+    val principal by vm.state.collectAsStateWithLifecycle()
+    val a by admin.state.collectAsStateWithLifecycle()
+    val s=principal.copy(cargando=principal.cargando || a.cargando)
+    val gestor=s.sesion?.privilegios?.contains("PUNTO_GESTIONAR")==true
+    LaunchedEffect(s.sesion?.token) { admin.limpiar() }
+    LaunchedEffect(s.pantalla,s.sesion?.token) { if(gestor && s.pantalla !in listOf(Pantalla.Ruta,Pantalla.Padron,Pantalla.Rutas,Pantalla.Perfil)) admin.cargar() }
+    LaunchedEffect(a.destino) {
+        a.destino?.let { destino ->
+            if(destino==Pantalla.Rutas && a.fechaDestino!=null) vm.abrirRutasGuardadas(a.fechaDestino!!)
+            else vm.navegar(destino)
+            admin.consumirDestino()
+        }
+    }
     EcoTheme {
         Surface(Modifier.fillMaxSize(),color=MaterialTheme.colorScheme.background) {
             Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding().padding(horizontal=20.dp,vertical=12.dp)) {
@@ -38,13 +52,19 @@ import java.time.ZoneId
                 if(s.cargando) LinearProgressIndicator(Modifier.fillMaxWidth())
                 s.mensaje?.let { message ->
                     Card(Modifier.fillMaxWidth().padding(vertical=8.dp),colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.primaryContainer)) {
-                        Column(Modifier.padding(12.dp)) { Text(message); if(s.reintentar && s.sesion!=null) TextButton(onClick=vm::sincronizar,enabled=!s.cargando) { Text("Reintentar") } }
+                        Column(Modifier.padding(12.dp)) { Text(message); if(s.reintentar) TextButton(onClick=vm::reintentar,enabled=!s.cargando) { Text("Reintentar") } }
                     }
                 }
+                if(gestor) a.mensaje?.let { message -> Card(Modifier.fillMaxWidth().padding(vertical=8.dp)) {
+                    Column(Modifier.padding(12.dp)) { Text(message); if(a.reintentar) TextButton(onClick=admin::reintentar,enabled=!s.cargando) { Text("Reintentar") } }
+                } }
                 if(s.sesion==null) Login(s,vm)
                 else {
-                    Row {
+                    Row(Modifier.horizontalScroll(rememberScrollState())) {
                         TextButton(onClick={ vm.navegar(Pantalla.Ruta) },enabled=!s.cargando) { Text("Mi ruta") }
+                        TextButton(onClick={ vm.navegar(Pantalla.Padron) },enabled=!s.cargando) { Text("Puntos") }
+                        if(s.sesion?.privilegios?.any { it=="RUTA_CERRAR" || it=="PUNTO_GESTIONAR" }==true) TextButton(onClick={vm.navegar(Pantalla.Rutas)},enabled=!s.cargando) { Text("Rutas") }
+                        if(gestor) TextButton(onClick={admin.limpiarMensaje();vm.navegar(Pantalla.Administracion)},enabled=!s.cargando) { Text("Administrar") }
                         TextButton(onClick=vm::perfil,enabled=!s.cargando) { Text("Perfil") }
                     }
                     BackHandler(enabled=s.pantalla!=Pantalla.Ruta) {
@@ -54,8 +74,11 @@ import java.time.ZoneId
                     when(val screen=s.pantalla) {
                         Pantalla.Ruta -> Ruta(s,vm)
                         Pantalla.Perfil -> Perfil(s,vm)
+                        Pantalla.Padron -> Padron(s,vm)
+                        Pantalla.Rutas -> Rutas(s,vm)
                         is Pantalla.Detalle -> Detalle(s,screen.puntoId,vm)
                         is Pantalla.Formulario -> Formulario(s,screen,vm)
+                        else -> if(gestor) AdministracionScreen(s,a,vm,admin) else Text("No tienes permiso para esta pantalla")
                     }
                 }
             }
@@ -80,6 +103,8 @@ import java.time.ZoneId
         item {
             Text("Ruta del dia",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
             Text(s.ruta?.let { "${it.fecha} · ${if(it.cerrada) "Cerrada" else "Abierta"}" } ?: "Sin ruta descargada")
+            s.ruta?.let { r -> Text("Ruta #${r.id} · ${s.rutas.find { it.id==r.id }?.usuario ?: "Usuario #${r.usuarioId}"}",style=MaterialTheme.typography.bodySmall) }
+            if(s.sesion?.privilegios?.contains("PUNTO_GESTIONAR")==true && s.ruta?.cerrada==false) TextButton(onClick={vm.navegar(Pantalla.Asignacion(s.ruta?.id))},enabled=!s.cargando) { Text("Editar planificacion") }
             Text("Ultima sincronizacion: ${s.ruta?.ultimaSync ?: "Todavia no se sincroniza"}",style=MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(12.dp))
             Button(onClick=vm::sincronizar,enabled=!s.cargando) { Text("Sincronizar") }
@@ -95,7 +120,7 @@ import java.time.ZoneId
                 Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                     Text("${p.secuencia.toString().padStart(2,'0')}  ${p.razonSocial}",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
                     Text(p.direccion); Text("${p.zona} · ${p.materialHabitual}",style=MaterialTheme.typography.bodySmall)
-                    Text(if(p.atendido) "Con pesaje" else "Pendiente de pesar",color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.SemiBold)
+                    Text(when { p.atendido -> "Con pesaje"; !p.motivoOmision.isNullOrBlank() -> "Omitido: ${p.motivoOmision}"; else -> "Pendiente de pesar" },color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.SemiBold)
                 }
             }
         }
@@ -103,7 +128,7 @@ import java.time.ZoneId
 }
 
 @Composable private fun Detalle(s: UiState,id: Long,vm: EcoViewModel) {
-    val p=s.puntos.find { it.id==id }
+    val p=s.puntos.find { it.id==id } ?: s.padron.find { it.id==id }
     val registros=s.pesajes.filter { it.pesaje.puntoId==id }
     var anulando by remember { mutableStateOf<Long?>(null) }
     var omision by remember { mutableStateOf(false) }
@@ -113,7 +138,9 @@ import java.time.ZoneId
             TextButton(onClick={vm.navegar(Pantalla.Ruta)}) { Text("Volver a mi ruta") }
             Text(p?.razonSocial ?: "Punto no disponible",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
             Text(p?.direccion.orEmpty()); Text("${p?.zona.orEmpty()} · ${p?.materialHabitual.orEmpty()}")
-            if(s.sesion?.privilegios?.contains("PESAJE_CREAR")==true && s.ruta?.cerrada==false) {
+            p?.motivoOmision?.let { Text("Omision: $it") }
+            if(s.sesion?.privilegios?.contains("PUNTO_GESTIONAR")==true) OutlinedButton(onClick={vm.navegar(Pantalla.PuntoFormulario(id))},enabled=!s.cargando) { Text("Editar punto") }
+            if(s.sesion?.privilegios?.contains("PESAJE_CREAR")==true && s.ruta?.cerrada==false && s.puntos.any { it.id==id }) {
                 Button(onClick={vm.navegar(Pantalla.Formulario(id))},enabled=!s.cargando) { Text("Registrar pesaje") }
                 TextButton(onClick={omision=true},enabled=s.conectado && !s.cargando) { Text("Registrar motivo de omision") }
             }
@@ -134,8 +161,8 @@ import java.time.ZoneId
                     val ownToday=w.operario==s.sesion?.usuario && w.fechaHora.substringBefore('T')==LocalDate.now(ZoneId.of("America/Lima")).toString()
                     val global=s.sesion?.privilegios?.contains("PESAJE_ANULAR")==true
                     val current=if(r.rutaId==s.ruta?.id) s.ruta?.cerrada==false else global
-                    if(current && w.estado==EstadoPesaje.Registrado) {
-                        if(s.sesion?.privilegios?.contains("PESAJE_EDITAR")==true && (ownToday || s.sesion?.privilegios?.contains("PESAJE_ANULAR")==true)) TextButton(onClick={vm.navegar(Pantalla.Formulario(id,w.id))},enabled=!s.cargando) { Text("Corregir") }
+                    if(w.estado==EstadoPesaje.Registrado) {
+                        if(current && s.sesion?.privilegios?.contains("PESAJE_EDITAR")==true && (ownToday || s.sesion?.privilegios?.contains("PESAJE_ANULAR")==true)) TextButton(onClick={vm.navegar(Pantalla.Formulario(id,w.id))},enabled=!s.cargando) { Text("Corregir") }
                         if(s.sesion?.privilegios?.contains("PESAJE_ANULAR")==true) TextButton(onClick={anulando=w.id},enabled=!s.cargando) { Text("Anular") }
                     }
                     if(w.pendiente && r.error!=null) TextButton(onClick={descartando=w.id},enabled=!s.cargando) { Text("Descartar cambio local") }
@@ -170,7 +197,8 @@ import java.time.ZoneId
     var confirmar by remember { mutableStateOf(false) }
     Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         Text("Tu perfil",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
-        Text(s.sesion?.usuario.orEmpty(),style=MaterialTheme.typography.titleLarge)
+        Text(s.sesion?.nombre.orEmpty(),style=MaterialTheme.typography.titleLarge)
+        Text("Usuario: ${s.sesion?.usuario.orEmpty()}")
         Text(s.sesion?.rol.orEmpty())
         Text("Privilegios",fontWeight=FontWeight.Bold)
         s.sesion?.privilegios?.sorted()?.forEach { Text(it) }
@@ -179,7 +207,7 @@ import java.time.ZoneId
     if(confirmar) AlertDialog(onDismissRequest={confirmar=false},title={Text("Cerrar turno")},text={Text("Se borraran la sesion y los datos de este dispositivo, incluidos los cambios sin enviar. Sincroniza antes si necesitas conservarlos.")},confirmButton={TextButton(onClick={confirmar=false;vm.salir()}) { Text("Cerrar sesion y limpiar") }},dismissButton={TextButton(onClick={confirmar=false}) { Text("Cancelar") }})
 }
 
-@Composable private fun Campo(label: String,value: String,onChange: (String)->Unit,error: String?,decimal: Boolean=false) {
+@Composable internal fun Campo(label: String,value: String,onChange: (String)->Unit,error: String?,decimal: Boolean=false) {
     OutlinedTextField(value,onChange,label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=true,isError=error!=null,supportingText={if(error!=null) Text(error)},keyboardOptions=KeyboardOptions(keyboardType=if(decimal) KeyboardType.Decimal else KeyboardType.Text))
 }
 

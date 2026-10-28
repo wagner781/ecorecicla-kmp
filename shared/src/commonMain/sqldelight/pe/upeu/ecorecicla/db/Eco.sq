@@ -2,7 +2,8 @@ CREATE TABLE RutaLocal (
  id INTEGER NOT NULL PRIMARY KEY,
  fecha TEXT NOT NULL,
  cerrada INTEGER NOT NULL,
- ultimaSync TEXT NOT NULL
+ ultimaSync TEXT NOT NULL,
+ usuarioId INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE PuntoLocal (
  id INTEGER NOT NULL PRIMARY KEY,
@@ -32,6 +33,15 @@ CREATE TABLE PesajeLocal (
  error TEXT
 );
 
+CREATE TABLE PadronLocal (
+ id INTEGER NOT NULL PRIMARY KEY, razonSocial TEXT NOT NULL,
+ direccion TEXT NOT NULL, zona TEXT NOT NULL, materialHabitual TEXT NOT NULL
+);
+CREATE TABLE RutaDisponible (
+ id INTEGER NOT NULL PRIMARY KEY, fecha TEXT NOT NULL, usuarioId INTEGER NOT NULL,
+ usuario TEXT NOT NULL, cerrada INTEGER NOT NULL
+);
+
 ruta:
 SELECT * FROM RutaLocal LIMIT 1;
 
@@ -49,7 +59,13 @@ siguienteId:
 SELECT MIN(COALESCE(MIN(id),0),0)-1 FROM PesajeLocal;
 
 guardarRuta:
-INSERT OR REPLACE INTO RutaLocal VALUES (?,?,?,?);
+INSERT OR REPLACE INTO RutaLocal(id,fecha,cerrada,ultimaSync) VALUES (?,?,?,?);
+
+asignarUsuarioRuta:
+UPDATE RutaLocal SET usuarioId=? WHERE id=?;
+
+cerrarRuta:
+UPDATE RutaLocal SET cerrada=1 WHERE id=?;
 
 guardarPunto:
 INSERT OR REPLACE INTO PuntoLocal VALUES (?,?,?,?,?,?,?);
@@ -74,3 +90,27 @@ DELETE FROM PuntoLocal;
 
 borrarRuta:
 DELETE FROM RutaLocal;
+
+padron:
+SELECT * FROM PadronLocal ORDER BY razonSocial,id;
+
+guardarPadron:
+INSERT OR REPLACE INTO PadronLocal VALUES (?,?,?,?,?);
+
+borrarPadron:
+DELETE FROM PadronLocal;
+
+rutasDisponibles:
+SELECT * FROM RutaDisponible ORDER BY fecha DESC,id;
+
+guardarRutaDisponible:
+INSERT OR REPLACE INTO RutaDisponible VALUES (?,?,?,?,?);
+
+borrarRutasFecha:
+DELETE FROM RutaDisponible WHERE fecha=?;
+
+borrarRutasDisponibles:
+DELETE FROM RutaDisponible;
+
+cerrarRutaDisponible:
+UPDATE RutaDisponible SET cerrada=1 WHERE id=?;
