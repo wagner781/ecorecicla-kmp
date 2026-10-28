@@ -14,11 +14,11 @@ import pe.upeu.ecorecicla.domain.model.*
     fun dominio()=PuntoAcopio(id,razonSocial,direccion,zona,materialHabitual,secuencia,atendido,motivoOmision)
 }
 @Serializable data class RutaDto(val id: Long,val fecha: String,val usuarioId: Long,val cerrada: Boolean,val puntos: List<PuntoDto>)
-@Serializable data class PesajeDto(val id: Long,val rutaId: Long,val puntoId: Long,val fechaHora: String,val material: String,val pesoBruto: Double,val tara: Double,val pesoNeto: Double,val operario: String,val operarioId: Long=0,val observacion: String?=null,val anulado: Boolean=false,val motivoAnulacion: String?=null) {
-    fun dominio()=Pesaje(id,puntoId,fechaHora,material,pesoBruto,tara,pesoNeto,operario,if(anulado) EstadoPesaje.Anulado(motivoAnulacion.orEmpty()) else EstadoPesaje.Registrado,false)
+@Serializable data class PesajeDto(val id: Long,val rutaId: Long,val puntoId: Long,val fechaHora: String,val material: String,val pesoBruto: Double,val tara: Double,val pesoNeto: Double,val operario: String,val operarioId: Long=0,val observacion: String?=null,val anulado: Boolean=false,val motivoAnulacion: String?=null,val humedadEstimada: Double?=null) {
+    fun dominio()=Pesaje(id,puntoId,fechaHora,material,pesoBruto,tara,pesoNeto,operario,if(anulado) EstadoPesaje.Anulado(motivoAnulacion.orEmpty()) else EstadoPesaje.Registrado,false,humedadEstimada)
 }
 // El cliente nunca envia pesoNeto.
-@Serializable data class PesajePeticionDto(val rutaId: Long,val puntoId: Long,val material: String,val pesoBruto: Double,val tara: Double,val observacion: String?,val claveCliente: String)
+@Serializable data class PesajePeticionDto(val rutaId: Long,val puntoId: Long,val material: String,val pesoBruto: Double,val tara: Double,val observacion: String?,val claveCliente: String,val humedadEstimada: Double?=null)
 @Serializable data class MotivoDto(val motivo: String)
 @Serializable data class RutaResumenDto(val id: Long,val fecha: String,val usuarioId: Long,val usuario: String,val cerrada: Boolean) {
     fun dominio()=RutaResumen(id,fecha,usuarioId,usuario,cerrada)

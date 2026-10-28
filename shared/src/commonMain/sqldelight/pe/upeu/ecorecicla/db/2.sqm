@@ -1,0 +1,1 @@
+ALTER TABLE PesajeLocal ADD COLUMN humedadEstimada REAL;
