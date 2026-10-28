@@ -1,0 +1,11 @@
+* 64a0bea feat(interfaz): conectar pantallas Compose con estado local y privilegios
+*   83ba666 Merge pull request #5 from wagner781/feature/persistencia-sincronizacion
+|\  
+| * 9d25159 test(offline): verificar cola sin red y orden con SQLite en memoria
+| * 4903e66 feat(offline): guardar pesajes locales y sincronizar sin duplicar
+|/  
+*   e84f809 Merge pull request #4 from wagner781/feature/cliente-seguro
+|\  
+| * 3312bab feat(red): centralizar Ktor y cifrar sesión con Android Keystore
+|/  
+* da495bd chore: preparar aplicación Android y módulo KMP compilables

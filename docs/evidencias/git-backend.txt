@@ -1,0 +1,18 @@
+*   15152cb Merge pull request #7 from wagner781/fix/vencimiento-jwt
+|\  
+| * 68e0423 fix(jwt): rechazar tokens desde su instante de vencimiento
+|/  
+*   1e8899c Merge pull request #6 from wagner781/feature/pruebas-documentacion
+|\  
+| * 99de008 test(api): verificar contrato HTTP contra PostgreSQL y documentar defensa
+|/  
+*   38bce6a Merge pull request #5 from wagner781/feature/pesajes-rutas
+|\  
+| * 429c601 test(dominio): verificar seguridad y RN-01 a RN-04
+| * 1970e31 feat(pesajes): aplicar reglas transaccionales y cargar rutas de demostración
+|/  
+*   199f4ef Merge pull request #4 from wagner781/feature/seguridad-jwt
+|\  
+| * 1ec986d feat(seguridad): validar credenciales y proteger API con JWT y privilegios
+|/  
+* 8d59131 chore: preparar proyecto Spring Boot compilable

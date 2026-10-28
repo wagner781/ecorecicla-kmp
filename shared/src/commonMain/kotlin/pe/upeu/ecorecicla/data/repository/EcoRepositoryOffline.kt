@@ -18,7 +18,8 @@ class EcoRepositoryOffline(private val local: BaseLocal,private val api: EcoApi,
     override suspend fun registrar(formulario: FormularioPesaje,id: Long?) = mutex.withLock {
         privilegio(if(id==null) "PESAJE_CREAR" else "PESAJE_EDITAR")
         val r=local.q.ruta().executeAsOneOrNull() ?: throw ErrorApi.Conflicto("Primero descarga una ruta")
-        if(r.cerrada==1L) throw ErrorApi.Conflicto("La ruta ya esta cerrada")
+        val anterior=id?.let { actual -> local.q.pesajes().executeAsList().find { it.id==actual }?.dominio() }
+        if(r.cerrada==1L && (anterior==null || anterior.rutaId==r.id)) throw ErrorApi.Conflicto("La ruta ya esta cerrada")
         val errores=buildMap {
             if(formulario.material.isBlank()) put("material","Indica un material")
             if(!formulario.pesoBruto.isFinite() || formulario.pesoBruto<=0) put("pesoBruto","Debe ser mayor que cero")
@@ -26,7 +27,7 @@ class EcoRepositoryOffline(private val local: BaseLocal,private val api: EcoApi,
         }
         if(errores.isNotEmpty()) throw ErrorApi.Validacion(errores,"Revisa los campos")
         local.db.transaction {
-            val previo=id?.let { actual -> local.q.pesajes().executeAsList().find { it.id==actual }?.dominio() }
+            val previo=anterior
             if(id!=null && previo==null) throw ErrorApi.NoEncontrado("Pesaje inexistente")
             val provisional=id ?: requireNotNull(local.q.siguienteId().executeAsOne().expr)
             val p=Pesaje(provisional,formulario.puntoId,previo?.pesaje?.fechaHora ?: reloj.ahoraIso(),formulario.material,formulario.pesoBruto,formulario.tara,previo?.pesaje?.pesoNeto ?: 0.0,previo?.pesaje?.operario ?: sesion().usuario,EstadoPesaje.Registrado,true)
@@ -56,7 +57,11 @@ class EcoRepositoryOffline(private val local: BaseLocal,private val api: EcoApi,
                     "ANULAR" -> { api.anular(p.pesaje.id,(p.pesaje.estado as EstadoPesaje.Anulado).motivo); local.guardar(p.copy(pesaje=p.pesaje.copy(pendiente=false),operacion="",error=null)) }
                 }
                 enviados++
-            } catch(e: ErrorApi) { if(e !is ErrorApi.NoAutorizado) local.q.errorPendiente(e.message,p.pesaje.id); throw e }
+            } catch(e: ErrorApi) {
+                if(e !is ErrorApi.NoAutorizado) local.q.errorPendiente(e.message,p.pesaje.id)
+                if(e is ErrorApi.Validacion) throw ErrorApi.Validacion(e.campos,e.message.orEmpty(),p.pesaje.id,p.pesaje.puntoId)
+                throw e
+            }
         }
         val ruta=api.ruta()
         val pesajes=ruta.puntos.flatMap { api.pesajes(it.id) }
@@ -82,4 +87,10 @@ class EcoRepositoryOffline(private val local: BaseLocal,private val api: EcoApi,
         api.omitir(r.id,punto,motivo)
     }
     override suspend fun cerrarSesion() = mutex.withLock { seguro.borrar(); local.limpiar() }
+    override suspend fun descartarPendiente(id: Long) = mutex.withLock {
+        sesion()
+        if(local.q.pendientes().executeAsList().none { it.id==id }) throw ErrorApi.Conflicto("Solo se descartan cambios pendientes")
+        local.q.borrarPesaje(id)
+        Unit
+    }
 }

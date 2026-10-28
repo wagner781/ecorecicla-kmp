@@ -5,3 +5,6 @@
 local.properties
 *.log
 *.jks
+docs/evidencias/ui.xml
+docs/evidencias/*.db
+docs/evidencias/render/

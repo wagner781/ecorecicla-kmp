@@ -2,8 +2,10 @@ plugins { id("com.android.application"); kotlin("android"); kotlin("plugin.compo
 android {
     namespace = "pe.upeu.ecorecicla"
     compileSdk = 36
-    defaultConfig { applicationId = "pe.upeu.ecorecicla"; minSdk = 26; targetSdk = 36; versionCode = 1; versionName = "0.1" }
-    buildFeatures { compose = true }
+    defaultConfig { applicationId = "pe.upeu.ecorecicla"; minSdk = 26; targetSdk = 36; versionCode = 1; versionName = "0.1"
+        buildConfigField("String", "API_URL", "\"${providers.gradleProperty("ecoApiUrl").getOrElse("http://10.0.2.2:8080/api/v1/")}\"")
+    }
+    buildFeatures { compose = true; buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_21; targetCompatibility = JavaVersion.VERSION_21 }
 }
 kotlin { jvmToolchain(21) }
