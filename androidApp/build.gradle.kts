@@ -14,4 +14,6 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4")
+    implementation("io.ktor:ktor-client-okhttp:3.3.1")
+    implementation("io.insert-koin:koin-android:4.1.1")
 }
