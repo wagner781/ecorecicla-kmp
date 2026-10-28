@@ -1,0 +1,76 @@
+CREATE TABLE RutaLocal (
+ id INTEGER NOT NULL PRIMARY KEY,
+ fecha TEXT NOT NULL,
+ cerrada INTEGER NOT NULL,
+ ultimaSync TEXT NOT NULL
+);
+CREATE TABLE PuntoLocal (
+ id INTEGER NOT NULL PRIMARY KEY,
+ razonSocial TEXT NOT NULL,
+ direccion TEXT NOT NULL,
+ zona TEXT NOT NULL,
+ materialHabitual TEXT NOT NULL,
+ secuencia INTEGER NOT NULL,
+ motivoOmision TEXT
+);
+CREATE TABLE PesajeLocal (
+ id INTEGER NOT NULL PRIMARY KEY,
+ puntoId INTEGER NOT NULL,
+ rutaId INTEGER NOT NULL,
+ fechaHora TEXT NOT NULL,
+ material TEXT NOT NULL,
+ pesoBruto REAL NOT NULL,
+ tara REAL NOT NULL,
+ pesoNeto REAL NOT NULL,
+ operario TEXT NOT NULL,
+ anulado INTEGER NOT NULL,
+ motivo TEXT,
+ pendiente INTEGER NOT NULL,
+ clave TEXT NOT NULL,
+ operacion TEXT NOT NULL,
+ observacion TEXT,
+ error TEXT
+);
+
+ruta:
+SELECT * FROM RutaLocal LIMIT 1;
+
+puntos:
+SELECT p.*, EXISTS(SELECT 1 FROM PesajeLocal x WHERE x.puntoId=p.id AND x.rutaId=(SELECT id FROM RutaLocal LIMIT 1) AND x.anulado=0) AS atendido
+FROM PuntoLocal p ORDER BY p.secuencia;
+
+pesajes:
+SELECT * FROM PesajeLocal ORDER BY fechaHora DESC,id DESC;
+
+pendientes:
+SELECT * FROM PesajeLocal WHERE pendiente=1 ORDER BY id;
+
+siguienteId:
+SELECT MIN(COALESCE(MIN(id),0),0)-1 FROM PesajeLocal;
+
+guardarRuta:
+INSERT OR REPLACE INTO RutaLocal VALUES (?,?,?,?);
+
+guardarPunto:
+INSERT OR REPLACE INTO PuntoLocal VALUES (?,?,?,?,?,?,?);
+
+guardarPesaje:
+INSERT OR REPLACE INTO PesajeLocal VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
+
+borrarPesaje:
+DELETE FROM PesajeLocal WHERE id=?;
+
+errorPendiente:
+UPDATE PesajeLocal SET error=? WHERE id=?;
+
+borrarLimpios:
+DELETE FROM PesajeLocal WHERE pendiente=0;
+
+borrarPesajes:
+DELETE FROM PesajeLocal;
+
+borrarPuntos:
+DELETE FROM PuntoLocal;
+
+borrarRuta:
+DELETE FROM RutaLocal;
