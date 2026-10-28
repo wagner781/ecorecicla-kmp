@@ -60,6 +60,7 @@ import java.time.ZoneId
                 } }
                 if(s.sesion==null) Login(s,vm)
                 else {
+                    if(s.sesion?.soloLectura==true) Text("Acceso de consulta: puntos y pesajes",style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.primary)
                     Row(Modifier.horizontalScroll(rememberScrollState())) {
                         TextButton(onClick={ vm.navegar(Pantalla.Ruta) },enabled=!s.cargando) { Text("Mi ruta") }
                         TextButton(onClick={ vm.navegar(Pantalla.Padron) },enabled=!s.cargando) { Text("Puntos") }
