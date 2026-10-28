@@ -26,4 +26,22 @@ class EcoApi(private val http: HttpClient) {
     suspend fun anular(id: Long,motivo: String) = llamada { http.delete("pesajes/$id") { setBody(MotivoDto(motivo)) }; Unit }
     suspend fun cerrar(id: Long): RutaDto = llamada { http.post("rutas/$id/cierre").body() }
     suspend fun omitir(ruta: Long,punto: Long,motivo: String) = llamada { http.put("rutas/$ruta/puntos/$punto/omision") { setBody(MotivoDto(motivo)) }; Unit }
+    suspend fun usuarios(): List<UsuarioGestionDto> = llamada { todas("usuarios") }
+    suspend fun roles(): List<RolGestionDto> = llamada { todas("roles") }
+    suspend fun privilegios(): List<String> = llamada { todas("privilegios") }
+    suspend fun guardarPunto(id: Long?,body: PuntoPeticionDto): PuntoDto = llamada {
+        if(id==null) http.post("puntos") { setBody(body) }.body() else http.put("puntos/$id") { setBody(body) }.body()
+    }
+    suspend fun eliminarPunto(id: Long) = llamada { http.delete("puntos/$id"); Unit }
+    suspend fun guardarUsuario(id: Long?,body: UsuarioPeticionDto): UsuarioGestionDto = llamada {
+        if(id==null) http.post("usuarios") { setBody(body) }.body() else http.put("usuarios/$id") { setBody(body) }.body()
+    }
+    suspend fun desactivarUsuario(id: Long) = llamada { http.delete("usuarios/$id"); Unit }
+    suspend fun guardarRol(nombre: String?,body: RolPeticionDto): RolGestionDto = llamada {
+        if(nombre==null) http.post("roles") { setBody(body) }.body() else http.put("roles/$nombre") { setBody(body) }.body()
+    }
+    suspend fun eliminarRol(nombre: String) = llamada { http.delete("roles/$nombre"); Unit }
+    suspend fun guardarRuta(id: Long?,body: RutaPeticionDto): RutaDto = llamada {
+        if(id==null) http.post("rutas") { setBody(body) }.body() else http.put("rutas/$id") { setBody(body) }.body()
+    }
 }
