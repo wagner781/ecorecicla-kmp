@@ -39,3 +39,5 @@ Operario: lectura, creación, corrección propia del día. Supervisor: esas capa
 Git: ramas `main`, `develop` y `feature/...`. Bootstrap compilable como primer commit, PR hacia develop con merge commit y luego fusión de develop a main. No se falsifican sesiones pasadas. La Parte II se implementa por peticion del usuario en cuatro ramas SC. Este historial documenta trabajo real; no acredita una asignacion docente ni sesiones pasadas.
 
 La sesion se administra mediante repositorio y casos de uso separados; `expiresAt` conserva el vencimiento firmado. Los cambios de rol invalidan tokens anteriores. Un 404 refresca el cache sin subir pendientes ni reintentar la escritura. La migracion SQLite 1→2 conserva la ruta anterior y agrega padron y rutas consultables.
+
+SC-B: usuario `auditor1`, clave `Eco2026*`, privilegios PUNTO_LEER y PESAJE_LEER. Abre Padron; consulta detalle y Perfil con indicador de acceso de consulta. No ofrece escrituras ni Administrar. Las reglas no comparan el nombre AUDITOR.

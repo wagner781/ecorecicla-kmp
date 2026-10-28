@@ -59,3 +59,7 @@ El supervisor selecciona rutas de operaciones por fecha, registra motivos de omi
 ## SC-A: busqueda y pendientes
 
 La ruta combina busqueda por razon social, direccion, zona o material con «Solo pendientes de pesar». `FiltrarRutaUseCase` conserva el orden planificado y recibe las filas observables de SQLite: funciona sin red y reacciona a un pesaje local. Una omision justificada resuelve la visita y queda fuera del filtro, aunque siga visible al desactivarlo. El composable solo dibuja `puntosVisibles` y emite eventos. Pruebas: FiltroRutaTest cubre combinacion, orden, vacio y cambio del cache con conectividad falsa.
+
+## SC-B: acceso de consulta
+
+`auditor1 / Eco2026*` entra al padron y consulta puntos, pesajes y perfil. No tiene creacion, correccion, anulacion, cierre ni gestion. La interfaz y los casos de uso dependen de privilegios; cambiar el nombre del rol no cambia la autorizacion. `AuditorClienteTest` garantiza que no puede encolar escrituras ni llamar al cierre y conserva la sesion ante rechazo. El servidor repite la autorizacion. Captura real: docs/evidencias/parte2/sc-b-auditor.png.
