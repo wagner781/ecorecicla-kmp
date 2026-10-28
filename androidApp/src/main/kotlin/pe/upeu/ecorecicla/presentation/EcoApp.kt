@@ -163,6 +163,7 @@ import java.time.ZoneId
                     Text("${w.material} · #${w.id}",fontWeight=FontWeight.Bold)
                     Text("Bruto ${w.pesoBruto} kg · Tara ${w.tara} kg")
                     Text(if(w.id<0) "Neto pendiente del servidor" else "Neto ${w.pesoNeto} kg")
+                    Text("Humedad estimada: ${w.humedadEstimada?.let { "$it %" } ?: "Sin estimar"}")
                     Text("${w.operario} · ${w.fechaHora}",style=MaterialTheme.typography.bodySmall)
                     if(w.pendiente) Text("Pendiente de sincronizar",color=MaterialTheme.colorScheme.primary)
                     (w.estado as? EstadoPesaje.Anulado)?.let { Text("Anulado: ${it.motivo}",color=MaterialTheme.colorScheme.error) }
@@ -189,6 +190,7 @@ import java.time.ZoneId
     var material by rememberSaveable(screen.pesajeId,screen.puntoId) { mutableStateOf(previo?.pesaje?.material ?: s.puntos.find { it.id==screen.puntoId }?.materialHabitual.orEmpty()) }
     var bruto by rememberSaveable(screen.pesajeId,screen.puntoId) { mutableStateOf(previo?.pesaje?.pesoBruto?.toString().orEmpty()) }
     var tara by rememberSaveable(screen.pesajeId,screen.puntoId) { mutableStateOf(previo?.pesaje?.tara?.toString() ?: "0") }
+    var humedad by rememberSaveable(screen.pesajeId,screen.puntoId) { mutableStateOf(previo?.pesaje?.humedadEstimada?.toString().orEmpty()) }
     var observacion by rememberSaveable(screen.pesajeId,screen.puntoId) { mutableStateOf(previo?.observacion.orEmpty()) }
     Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         TextButton(onClick={vm.navegar(Pantalla.Detalle(screen.puntoId))}) { Text("Volver al punto") }
@@ -197,8 +199,9 @@ import java.time.ZoneId
         Campo("Material",material,{material=it},s.campos["material"])
         Campo("Peso bruto (kg)",bruto,{bruto=it},s.campos["pesoBruto"],true)
         Campo("Tara (kg)",tara,{tara=it},s.campos["tara"],true)
+        Campo("Humedad estimada (%) - opcional",humedad,{humedad=it},s.campos["humedadEstimada"],true)
         Campo("Observacion",observacion,{observacion=it},s.campos["observacion"])
-        Button(onClick={ vm.guardar(FormularioPesaje(screen.puntoId,material,bruto.replace(',','.').toDoubleOrNull() ?: Double.NaN,tara.replace(',','.').toDoubleOrNull() ?: Double.NaN,observacion.ifBlank { null }),screen.pesajeId) },enabled=!s.cargando,modifier=Modifier.fillMaxWidth().height(52.dp)) { Text("Guardar pesaje") }
+        Button(onClick={ vm.guardar(FormularioPesaje(screen.puntoId,material,bruto.replace(',','.').toDoubleOrNull() ?: Double.NaN,tara.replace(',','.').toDoubleOrNull() ?: Double.NaN,observacion.ifBlank { null },if(humedad.isBlank()) null else humedad.replace(',','.').toDoubleOrNull() ?: Double.NaN),screen.pesajeId) },enabled=!s.cargando,modifier=Modifier.fillMaxWidth().height(52.dp)) { Text("Guardar pesaje") }
     }
 }
 

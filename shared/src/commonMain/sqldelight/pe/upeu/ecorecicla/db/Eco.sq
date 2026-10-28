@@ -30,7 +30,8 @@ CREATE TABLE PesajeLocal (
  clave TEXT NOT NULL,
  operacion TEXT NOT NULL,
  observacion TEXT,
- error TEXT
+ error TEXT,
+ humedadEstimada REAL
 );
 
 CREATE TABLE PadronLocal (
@@ -71,7 +72,7 @@ guardarPunto:
 INSERT OR REPLACE INTO PuntoLocal VALUES (?,?,?,?,?,?,?);
 
 guardarPesaje:
-INSERT OR REPLACE INTO PesajeLocal VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
+INSERT OR REPLACE INTO PesajeLocal VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
 
 borrarPesaje:
 DELETE FROM PesajeLocal WHERE id=?;

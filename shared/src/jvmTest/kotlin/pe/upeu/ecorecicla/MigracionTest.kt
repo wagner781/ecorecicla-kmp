@@ -5,6 +5,16 @@ import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import pe.upeu.ecorecicla.db.EcoDatabase
 
 class MigracionTest {
+    @Test fun agregarHumedadConservaPesajePendienteVersionDos() {
+        val driver=JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        try {
+            driver.execute(null,"""CREATE TABLE PesajeLocal(id INTEGER PRIMARY KEY NOT NULL,puntoId INTEGER NOT NULL,rutaId INTEGER NOT NULL,fechaHora TEXT NOT NULL,material TEXT NOT NULL,pesoBruto REAL NOT NULL,tara REAL NOT NULL,pesoNeto REAL NOT NULL,operario TEXT NOT NULL,anulado INTEGER NOT NULL,motivo TEXT,pendiente INTEGER NOT NULL,clave TEXT NOT NULL,operacion TEXT NOT NULL,observacion TEXT,error TEXT)""",0)
+            driver.execute(null,"""INSERT INTO PesajeLocal VALUES(-1,1,1,'2026-10-28T08:00:00-05:00','Papel',12,2,0,'operario1',0,NULL,1,'clave-original','CREAR',NULL,NULL)""",0)
+            EcoDatabase.Schema.migrate(driver,2,3)
+            val p=EcoDatabase(driver).ecoQueries.pendientes().executeAsOne()
+            assertEquals(-1L,p.id); assertEquals("clave-original",p.clave); assertNull(p.humedadEstimada)
+        } finally { driver.close() }
+    }
     @Test fun conservaRutaExistenteAlAgregarPadronYSupervision() {
         val driver=JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         try {

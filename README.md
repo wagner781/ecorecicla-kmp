@@ -41,3 +41,5 @@ Git: ramas `main`, `develop` y `feature/...`. Bootstrap compilable como primer c
 La sesion se administra mediante repositorio y casos de uso separados; `expiresAt` conserva el vencimiento firmado. Los cambios de rol invalidan tokens anteriores. Un 404 refresca el cache sin subir pendientes ni reintentar la escritura. La migracion SQLite 1→2 conserva la ruta anterior y agrega padron y rutas consultables.
 
 SC-B: usuario `auditor1`, clave `Eco2026*`, privilegios PUNTO_LEER y PESAJE_LEER. Abre Padron; consulta detalle y Perfil con indicador de acceso de consulta. No ofrece escrituras ni Administrar. Las reglas no comparan el nombre AUDITOR.
+
+SC-C: formulario y detalle de pesaje incluyen Humedad estimada (%) opcional, 0..100 con hasta dos decimales; SQLite migra de version 2 a 3 sin borrar pendientes. La cola envia y recupera el valor con el ID definitivo. No interviene en el neto. Se ejecutan 30 casos comunes y dos migraciones JVM tras este cambio.
