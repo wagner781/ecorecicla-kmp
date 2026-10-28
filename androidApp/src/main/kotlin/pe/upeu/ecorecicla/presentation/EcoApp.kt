@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -43,8 +44,10 @@ import java.time.ZoneId
                 }
                 if(s.sesion==null) Login(s,vm)
                 else {
-                    Row {
+                    Row(Modifier.horizontalScroll(rememberScrollState())) {
                         TextButton(onClick={ vm.navegar(Pantalla.Ruta) },enabled=!s.cargando) { Text("Mi ruta") }
+                        TextButton(onClick={ vm.navegar(Pantalla.Padron) },enabled=!s.cargando) { Text("Puntos") }
+                        if(s.sesion?.privilegios?.any { it=="RUTA_CERRAR" || it=="PUNTO_GESTIONAR" }==true) TextButton(onClick={vm.navegar(Pantalla.Rutas)},enabled=!s.cargando) { Text("Rutas") }
                         TextButton(onClick=vm::perfil,enabled=!s.cargando) { Text("Perfil") }
                     }
                     BackHandler(enabled=s.pantalla!=Pantalla.Ruta) {
@@ -54,6 +57,8 @@ import java.time.ZoneId
                     when(val screen=s.pantalla) {
                         Pantalla.Ruta -> Ruta(s,vm)
                         Pantalla.Perfil -> Perfil(s,vm)
+                        Pantalla.Padron -> Padron(s,vm)
+                        Pantalla.Rutas -> Rutas(s,vm)
                         is Pantalla.Detalle -> Detalle(s,screen.puntoId,vm)
                         is Pantalla.Formulario -> Formulario(s,screen,vm)
                     }
@@ -103,7 +108,7 @@ import java.time.ZoneId
 }
 
 @Composable private fun Detalle(s: UiState,id: Long,vm: EcoViewModel) {
-    val p=s.puntos.find { it.id==id }
+    val p=s.puntos.find { it.id==id } ?: s.padron.find { it.id==id }
     val registros=s.pesajes.filter { it.pesaje.puntoId==id }
     var anulando by remember { mutableStateOf<Long?>(null) }
     var omision by remember { mutableStateOf(false) }
@@ -113,7 +118,8 @@ import java.time.ZoneId
             TextButton(onClick={vm.navegar(Pantalla.Ruta)}) { Text("Volver a mi ruta") }
             Text(p?.razonSocial ?: "Punto no disponible",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
             Text(p?.direccion.orEmpty()); Text("${p?.zona.orEmpty()} · ${p?.materialHabitual.orEmpty()}")
-            if(s.sesion?.privilegios?.contains("PESAJE_CREAR")==true && s.ruta?.cerrada==false) {
+            p?.motivoOmision?.let { Text("Omision: $it") }
+            if(s.sesion?.privilegios?.contains("PESAJE_CREAR")==true && s.ruta?.cerrada==false && s.puntos.any { it.id==id }) {
                 Button(onClick={vm.navegar(Pantalla.Formulario(id))},enabled=!s.cargando) { Text("Registrar pesaje") }
                 TextButton(onClick={omision=true},enabled=s.conectado && !s.cargando) { Text("Registrar motivo de omision") }
             }
@@ -134,8 +140,8 @@ import java.time.ZoneId
                     val ownToday=w.operario==s.sesion?.usuario && w.fechaHora.substringBefore('T')==LocalDate.now(ZoneId.of("America/Lima")).toString()
                     val global=s.sesion?.privilegios?.contains("PESAJE_ANULAR")==true
                     val current=if(r.rutaId==s.ruta?.id) s.ruta?.cerrada==false else global
-                    if(current && w.estado==EstadoPesaje.Registrado) {
-                        if(s.sesion?.privilegios?.contains("PESAJE_EDITAR")==true && (ownToday || s.sesion?.privilegios?.contains("PESAJE_ANULAR")==true)) TextButton(onClick={vm.navegar(Pantalla.Formulario(id,w.id))},enabled=!s.cargando) { Text("Corregir") }
+                    if(w.estado==EstadoPesaje.Registrado) {
+                        if(current && s.sesion?.privilegios?.contains("PESAJE_EDITAR")==true && (ownToday || s.sesion?.privilegios?.contains("PESAJE_ANULAR")==true)) TextButton(onClick={vm.navegar(Pantalla.Formulario(id,w.id))},enabled=!s.cargando) { Text("Corregir") }
                         if(s.sesion?.privilegios?.contains("PESAJE_ANULAR")==true) TextButton(onClick={anulando=w.id},enabled=!s.cargando) { Text("Anular") }
                     }
                     if(w.pendiente && r.error!=null) TextButton(onClick={descartando=w.id},enabled=!s.cargando) { Text("Descartar cambio local") }
@@ -179,7 +185,7 @@ import java.time.ZoneId
     if(confirmar) AlertDialog(onDismissRequest={confirmar=false},title={Text("Cerrar turno")},text={Text("Se borraran la sesion y los datos de este dispositivo, incluidos los cambios sin enviar. Sincroniza antes si necesitas conservarlos.")},confirmButton={TextButton(onClick={confirmar=false;vm.salir()}) { Text("Cerrar sesion y limpiar") }},dismissButton={TextButton(onClick={confirmar=false}) { Text("Cancelar") }})
 }
 
-@Composable private fun Campo(label: String,value: String,onChange: (String)->Unit,error: String?,decimal: Boolean=false) {
+@Composable internal fun Campo(label: String,value: String,onChange: (String)->Unit,error: String?,decimal: Boolean=false) {
     OutlinedTextField(value,onChange,label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=true,isError=error!=null,supportingText={if(error!=null) Text(error)},keyboardOptions=KeyboardOptions(keyboardType=if(decimal) KeyboardType.Decimal else KeyboardType.Text))
 }
 

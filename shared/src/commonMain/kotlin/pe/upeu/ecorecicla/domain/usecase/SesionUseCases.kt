@@ -8,6 +8,7 @@ class IniciarSesionUseCase(private val repo: SesionRepository) {
 }
 class ConsultarSesionUseCase(private val repo: SesionRepository) {
     fun actual()=repo.actual()
+    fun observar()=repo.observar()
     suspend operator fun invoke()=repo.perfil()
 }
 class CerrarSesionUseCase(private val repo: SesionRepository) { suspend operator fun invoke()=repo.cerrar() }

@@ -20,5 +20,6 @@ val dataModule=module {
 val domainModule=module {
     factory { SincronizarUseCase(get()) }; factory { RegistrarPesajeUseCase(get()) }
     factory { IniciarSesionUseCase(get()) }; factory { ConsultarSesionUseCase(get()) }; factory { CerrarSesionUseCase(get()) }
+    factory { CatalogoUseCases(get(),get()) }
 }
-val presentationModule=module { factory { EcoViewModel(get(),get(),get(),get(),get(),get(),get()) } }
+val presentationModule=module { factory { EcoViewModel(get(),get(),get(),get(),get(),get(),get(),get()) } }
