@@ -28,7 +28,7 @@ Si se descargara primero, se podría ocultar o reemplazar un registro local ante
 
 ## Errores y pantallas
 
-`mapearError` traduce 400, 401, 403, 404, 409 y 5xx a la jerarquía ErrorApi. `llamada` distingue falta de conexión y timeout y respeta cancelación de corrutinas. UiState mantiene carga, contenido local, vacío, mensajes, errores de campo y disponibilidad de reintento. Si el servidor rechaza un pendiente con 400, el repositorio adjunta sus IDs al error de dominio; el ViewModel reabre el formulario correspondiente y conserva validationErrors bajo cada campo. El rechazo también queda en la fila. 404 y 403 no muestran reintento; el cache se vuelve a consultar por Flow y se puede actualizar con sincronización. Si el servidor borró un recurso con un cambio local pendiente, se conserva para resolverlo, en lugar de descartarlo automáticamente.
+`mapearError` traduce 400, 401, 403, 404, 409 y 5xx a la jerarquía ErrorApi. `llamada` distingue falta de conexión y timeout y respeta cancelación de corrutinas. UiState mantiene carga, contenido local, vacío, mensajes, errores de campo y disponibilidad de reintento. Si el servidor rechaza un pendiente con 400, el repositorio adjunta sus IDs al error de dominio; el ViewModel reabre el formulario correspondiente y conserva validationErrors bajo cada campo. El rechazo también queda en la fila. 404 y 403 no muestran reintento. Ante 404 se descarga de nuevo el cache sin enviar ni borrar cambios pendientes. Si el servidor borró un recurso con un cambio local pendiente, se conserva para resolverlo, en lugar de descartarlo automáticamente.
 
 Los botones dependen de privilegios: registrar, corregir, anular y cerrar. Para operarios, corregir requiere además autor y fecha del día; para supervisor se usa el privilegio de alcance global de la matriz. Ocultarlos mejora la experiencia, pero no protege el servicio: las pruebas HTTP del backend llaman directamente con privilegios insuficientes y reciben 403.
 
@@ -49,4 +49,10 @@ Koin registra `platformModule` (Android Keystore, SQLite driver, OkHttp, reloj, 
 7. Entrar como supervisor y explicar las acciones disponibles, anulación lógica y RN-04.
 8. Ejecutar `:shared:allTests` y abrir los informes. Recorrer un archivo de cada capa con un registro concreto.
 
-Las capturas incluidas son reales de esta sesión. El historial no acredita desarrollo previo, no se fabricaron conflictos y no se implementó ninguna SC sin que el docente la asigne. Para Parte II crear `sc-<letra>-<apellido>` desde develop y registrar al menos tres avances reales durante el trabajo.
+Las capturas incluidas son reales de esta sesión. El historial no acredita desarrollo previo, no se fabricaron conflictos y el usuario solicito implementar las cuatro SC. Las ramas documentan avances reales desde develop; no prueban una asignacion docente durante el examen.
+
+## Gestion y supervision completadas en Parte I
+
+El administrador abre Padron, Usuarios, Roles o Asignacion. `AdministracionViewModel` usa casos de uso y repositorio propios; no recibe hashes ni decide por nombre de rol. Las selecciones de roles y privilegios provienen del API. Una asignacion admite solo usuarios activos con PESAJE_CREAR y conserva el orden de seleccion de los puntos. El servicio impide eliminar puntos referenciados, roles en uso y el ultimo administrador activo.
+
+El supervisor selecciona rutas de operaciones por fecha, registra motivos de omision y solicita cierre. La respuesta 409 conserva la ruta abierta y explica cuantos puntos faltan. Tras el cierre se actualizan atomicamente el detalle y el listado local. `docs/evidencias/parte1` registra pruebas reales, incluidas altas, modificaciones y bajas de gestion. Las cuentas QA creadas por las pruebas quedan desactivadas.
