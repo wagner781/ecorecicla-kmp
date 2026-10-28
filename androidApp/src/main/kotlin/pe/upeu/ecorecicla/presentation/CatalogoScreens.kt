@@ -19,6 +19,7 @@ import pe.upeu.ecorecicla.presentation.navigation.Pantalla
             Text("Consulta el padron descargado, incluso sin conexion.")
             Campo("Filtrar por zona",s.zona,vm::filtrarZona,null)
             Button(onClick=vm::sincronizar,enabled=!s.cargando) { Text("Actualizar padron") }
+            if(s.sesion?.privilegios?.contains("PUNTO_GESTIONAR")==true) OutlinedButton(onClick={vm.navegar(Pantalla.PuntoFormulario())},enabled=!s.cargando && s.conectado) { Text("Nuevo punto") }
         }
         if(s.padronVisible.isEmpty() && !s.cargando) item { Text(if(s.zona.isBlank()) "No hay puntos descargados. Actualiza con conexion." else "No hay puntos para esa zona.") }
         items(s.padronVisible,key={it.id}) { p ->
@@ -33,7 +34,7 @@ import pe.upeu.ecorecicla.presentation.navigation.Pantalla
 }
 
 @Composable internal fun Rutas(s: UiState,vm: EcoViewModel) {
-    var fecha by rememberSaveable { mutableStateOf(s.fechaRutas) }
+    var fecha by rememberSaveable(s.fechaRutas) { mutableStateOf(s.fechaRutas) }
     LazyColumn(verticalArrangement=Arrangement.spacedBy(12.dp)) {
         item {
             Text("Rutas de operaciones",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)

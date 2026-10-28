@@ -23,11 +23,24 @@ import pe.upeu.ecorecicla.presentation.navigation.Pantalla
 import pe.upeu.ecorecicla.presentation.theme.EcoTheme
 import pe.upeu.ecorecicla.domain.model.*
 import pe.upeu.ecorecicla.domain.repository.*
+import pe.upeu.ecorecicla.presentation.administracion.AdministracionViewModel
 import java.time.LocalDate
 import java.time.ZoneId
 
-@Composable fun EcoApp(vm: EcoViewModel) {
-    val s by vm.state.collectAsStateWithLifecycle()
+@Composable fun EcoApp(vm: EcoViewModel,admin: AdministracionViewModel) {
+    val principal by vm.state.collectAsStateWithLifecycle()
+    val a by admin.state.collectAsStateWithLifecycle()
+    val s=principal.copy(cargando=principal.cargando || a.cargando)
+    val gestor=s.sesion?.privilegios?.contains("PUNTO_GESTIONAR")==true
+    LaunchedEffect(s.sesion?.token) { admin.limpiar() }
+    LaunchedEffect(s.pantalla,s.sesion?.token) { if(gestor && s.pantalla !in listOf(Pantalla.Ruta,Pantalla.Padron,Pantalla.Rutas,Pantalla.Perfil)) admin.cargar() }
+    LaunchedEffect(a.destino) {
+        a.destino?.let { destino ->
+            if(destino==Pantalla.Rutas && a.fechaDestino!=null) vm.abrirRutasGuardadas(a.fechaDestino!!)
+            else vm.navegar(destino)
+            admin.consumirDestino()
+        }
+    }
     EcoTheme {
         Surface(Modifier.fillMaxSize(),color=MaterialTheme.colorScheme.background) {
             Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding().padding(horizontal=20.dp,vertical=12.dp)) {
@@ -42,12 +55,16 @@ import java.time.ZoneId
                         Column(Modifier.padding(12.dp)) { Text(message); if(s.reintentar) TextButton(onClick=vm::reintentar,enabled=!s.cargando) { Text("Reintentar") } }
                     }
                 }
+                if(gestor) a.mensaje?.let { message -> Card(Modifier.fillMaxWidth().padding(vertical=8.dp)) {
+                    Column(Modifier.padding(12.dp)) { Text(message); if(a.reintentar) TextButton(onClick=admin::reintentar,enabled=!s.cargando) { Text("Reintentar") } }
+                } }
                 if(s.sesion==null) Login(s,vm)
                 else {
                     Row(Modifier.horizontalScroll(rememberScrollState())) {
                         TextButton(onClick={ vm.navegar(Pantalla.Ruta) },enabled=!s.cargando) { Text("Mi ruta") }
                         TextButton(onClick={ vm.navegar(Pantalla.Padron) },enabled=!s.cargando) { Text("Puntos") }
                         if(s.sesion?.privilegios?.any { it=="RUTA_CERRAR" || it=="PUNTO_GESTIONAR" }==true) TextButton(onClick={vm.navegar(Pantalla.Rutas)},enabled=!s.cargando) { Text("Rutas") }
+                        if(gestor) TextButton(onClick={admin.limpiarMensaje();vm.navegar(Pantalla.Administracion)},enabled=!s.cargando) { Text("Administrar") }
                         TextButton(onClick=vm::perfil,enabled=!s.cargando) { Text("Perfil") }
                     }
                     BackHandler(enabled=s.pantalla!=Pantalla.Ruta) {
@@ -61,6 +78,7 @@ import java.time.ZoneId
                         Pantalla.Rutas -> Rutas(s,vm)
                         is Pantalla.Detalle -> Detalle(s,screen.puntoId,vm)
                         is Pantalla.Formulario -> Formulario(s,screen,vm)
+                        else -> if(gestor) AdministracionScreen(s,a,vm,admin) else Text("No tienes permiso para esta pantalla")
                     }
                 }
             }
@@ -85,6 +103,7 @@ import java.time.ZoneId
         item {
             Text("Ruta del dia",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
             Text(s.ruta?.let { "${it.fecha} · ${if(it.cerrada) "Cerrada" else "Abierta"}" } ?: "Sin ruta descargada")
+            if(s.sesion?.privilegios?.contains("PUNTO_GESTIONAR")==true && s.ruta?.cerrada==false) TextButton(onClick={vm.navegar(Pantalla.Asignacion(s.ruta?.id))},enabled=!s.cargando) { Text("Editar planificacion") }
             Text("Ultima sincronizacion: ${s.ruta?.ultimaSync ?: "Todavia no se sincroniza"}",style=MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(12.dp))
             Button(onClick=vm::sincronizar,enabled=!s.cargando) { Text("Sincronizar") }
@@ -119,6 +138,7 @@ import java.time.ZoneId
             Text(p?.razonSocial ?: "Punto no disponible",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
             Text(p?.direccion.orEmpty()); Text("${p?.zona.orEmpty()} · ${p?.materialHabitual.orEmpty()}")
             p?.motivoOmision?.let { Text("Omision: $it") }
+            if(s.sesion?.privilegios?.contains("PUNTO_GESTIONAR")==true) OutlinedButton(onClick={vm.navegar(Pantalla.PuntoFormulario(id))},enabled=!s.cargando) { Text("Editar punto") }
             if(s.sesion?.privilegios?.contains("PESAJE_CREAR")==true && s.ruta?.cerrada==false && s.puntos.any { it.id==id }) {
                 Button(onClick={vm.navegar(Pantalla.Formulario(id))},enabled=!s.cargando) { Text("Registrar pesaje") }
                 TextButton(onClick={omision=true},enabled=s.conectado && !s.cargando) { Text("Registrar motivo de omision") }
