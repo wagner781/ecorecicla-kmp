@@ -14,6 +14,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var vm: EcoViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        androidx.core.view.WindowCompat.getInsetsController(window,window.decorView).isAppearanceLightStatusBars=true
         vm=ViewModelProvider(this,object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T = get<EcoViewModel>() as T

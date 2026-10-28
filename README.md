@@ -32,7 +32,7 @@ Operario: lectura, creación, corrección propia del día. Supervisor: esas capa
 
 ## Pruebas y evidencias
 
-`./gradlew :shared:allTests` ejecuta las siete pruebas commonTest usando MockEngine y SQLite en memoria en JVM y variantes unitarias Android. Informe JVM: `shared/build/reports/tests/jvmTest/index.html`; Android: `shared/build/reports/tests/testDebugUnitTest/index.html`. La CI además genera un APK descargable.
+`./gradlew :shared:allTests` ejecuta las ocho pruebas commonTest usando MockEngine y SQLite en memoria en JVM y variantes unitarias Android. Informe JVM: `shared/build/reports/tests/jvmTest/index.html`; Android: `shared/build/reports/tests/testDebugUnitTest/index.html`. La CI además genera un APK descargable.
 
 `docs/evidencias/` contiene capturas reales de login, ruta, modo avión e ID definitivo después de sincronizar. [Guía de defensa](docs/DEFENSA.md): recorrido de los datos, seguridad, sincronización, decisiones y pasos de demostración. El cierre de sesión advierte que elimina también cambios sin enviar para dejar limpio el equipo compartido.
 

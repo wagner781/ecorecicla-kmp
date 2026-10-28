@@ -17,5 +17,6 @@ interface EcoRepository {
     suspend fun sincronizar(): ResumenSync
     suspend fun cerrarRuta()
     suspend fun omitir(punto: Long,motivo: String)
+    suspend fun descartarPendiente(id: Long)
     suspend fun cerrarSesion()
 }

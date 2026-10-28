@@ -107,6 +107,7 @@ import java.time.ZoneId
     val registros=s.pesajes.filter { it.pesaje.puntoId==id }
     var anulando by remember { mutableStateOf<Long?>(null) }
     var omision by remember { mutableStateOf(false) }
+    var descartando by remember { mutableStateOf<Long?>(null) }
     LazyColumn(verticalArrangement=Arrangement.spacedBy(12.dp)) {
         item {
             TextButton(onClick={vm.navegar(Pantalla.Ruta)}) { Text("Volver a mi ruta") }
@@ -131,17 +132,20 @@ import java.time.ZoneId
                     (w.estado as? EstadoPesaje.Anulado)?.let { Text("Anulado: ${it.motivo}",color=MaterialTheme.colorScheme.error) }
                     r.error?.let { Text(it,color=MaterialTheme.colorScheme.error) }
                     val ownToday=w.operario==s.sesion?.usuario && w.fechaHora.substringBefore('T')==LocalDate.now(ZoneId.of("America/Lima")).toString()
-                    val current=r.rutaId==s.ruta?.id && s.ruta?.cerrada==false
+                    val global=s.sesion?.privilegios?.contains("PESAJE_ANULAR")==true
+                    val current=if(r.rutaId==s.ruta?.id) s.ruta?.cerrada==false else global
                     if(current && w.estado==EstadoPesaje.Registrado) {
                         if(s.sesion?.privilegios?.contains("PESAJE_EDITAR")==true && (ownToday || s.sesion?.privilegios?.contains("PESAJE_ANULAR")==true)) TextButton(onClick={vm.navegar(Pantalla.Formulario(id,w.id))},enabled=!s.cargando) { Text("Corregir") }
                         if(s.sesion?.privilegios?.contains("PESAJE_ANULAR")==true) TextButton(onClick={anulando=w.id},enabled=!s.cargando) { Text("Anular") }
                     }
+                    if(w.pendiente && r.error!=null) TextButton(onClick={descartando=w.id},enabled=!s.cargando) { Text("Descartar cambio local") }
                 }
             }
         }
     }
     anulando?.let { pesaje -> MotivoDialog("Anular pesaje",{anulando=null}) { motivo -> anulando=null;vm.anular(pesaje,motivo) } }
     if(omision) MotivoDialog("Motivo de omision",{omision=false}) { motivo -> omision=false;vm.omitir(id,motivo) }
+    descartando?.let { pesaje -> AlertDialog(onDismissRequest={descartando=null},title={Text("Descartar cambio local")},text={Text("Se perdera solo este cambio sin enviar. Los registros del servidor se conservan y se descargaran al sincronizar.")},confirmButton={TextButton(onClick={descartando=null;vm.descartar(pesaje)}) { Text("Descartar") }},dismissButton={TextButton(onClick={descartando=null}) { Text("Cancelar") }}) }
 }
 
 @Composable private fun Formulario(s: UiState,screen: Pantalla.Formulario,vm: EcoViewModel) {

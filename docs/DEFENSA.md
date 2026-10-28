@@ -10,13 +10,13 @@ El dominio conserva exactamente los tipos y la anulabilidad de PuntoAcopio, Esta
 
 El caso de uso invoca `EcoRepositoryOffline.registrar`. Valida el formulario para dar respuesta inmediata, obtiene en transacción `MIN(COALESCE(MIN(id),0),0)-1`, asigna una clave UUID y guarda `pendiente=1`. El cálculo produce -1 incluso si no hay filas o solo hay IDs positivos. El peso neto provisional es 0 y se muestra como pendiente de cálculo del servidor. No se envía neto al API. Las correcciones conservan el neto anterior hasta que el servidor responda.
 
-`puntos` calcula atención con EXISTS sobre pesajes de la ruta actual que no estén anulados; un registro local modifica el Flow sin esperar a la red. Los pesajes históricos se muestran en el detalle, pero no cuentan para la atención de hoy.
+`puntos` calcula atención con EXISTS sobre pesajes de la ruta actual que no estén anulados; un registro local modifica el Flow sin esperar a la red. Los pesajes históricos se muestran en el detalle, pero no cuentan para la atención de hoy. El supervisor puede corregir registros de otras rutas: se conserva su ruta original y el servidor comprueba su cierre real, sin usar el estado de la ruta asignada al supervisor.
 
 ## Orden de sincronización
 
 `SincronizarUseCase` delega en el repositorio. Un Mutex serializa sincronización, escritura y cierre de sesión. Primero se recorren los pendientes. CREAR hace POST, EDITAR hace PUT y ANULAR hace DELETE; el 204 no se deserializa. La sustitución del ID provisional y la fila definitiva es una transacción local. Luego se descarga la ruta y todas las páginas de cada punto. Solo cuando todas las respuestas llegan se sustituye el cache, también en transacción.
 
-Si se descargara primero, se podría ocultar o reemplazar un registro local antes de enviarlo. Si el POST se guardó pero la respuesta se perdió, se reenvía la misma clave de creación y el servidor devuelve el mismo ID. Un 400, 403 o 409 conserva la fila y su mensaje; detiene la descarga para no destruir el cambio rechazado. La corrección del formulario conserva la clave. El usuario debe resolver el conflicto; no se altera silenciosamente el dato del servidor.
+Si se descargara primero, se podría ocultar o reemplazar un registro local antes de enviarlo. Si el POST se guardó pero la respuesta se perdió, se reenvía la misma clave de creación y el servidor devuelve el mismo ID. Un 400, 403 o 409 conserva la fila y su mensaje; detiene la descarga para no destruir el cambio rechazado. La corrección del formulario conserva la clave. El usuario puede corregirlo o descartar expresamente el cambio local rechazado; esa acción no elimina nada del servidor.
 
 `ConnectivityManager` emite un Flow al recuperar una red validada y el ViewModel solicita sincronización automática. También existe el botón manual. La reconexión automática funciona mientras el proceso de la app está activo y al reabrirla con red. No se promete sincronización con la app detenida por el sistema: eso requeriría WorkManager y otro ciclo de vida.
 

@@ -74,6 +74,11 @@ class EcoViewModel(private val repo: EcoRepository,private val api: EcoApi,priva
     }
     fun omitir(punto: Long,motivo: String)=ejecutar { repo.omitir(punto,motivo); sync(); mutable.update { it.copy(mensaje="Omision guardada") } }
     fun cerrarRuta()=ejecutar { repo.cerrarRuta(); mutable.update { it.copy(mensaje="Ruta cerrada") } }
+    fun descartar(id: Long)=ejecutar {
+        repo.descartarPendiente(id)
+        if(state.value.conectado) sync()
+        mutable.update { it.copy(mensaje="Cambio local descartado. Los datos del servidor se conservan") }
+    }
     fun perfil()=ejecutar {
         mutable.update { it.copy(pantalla=Pantalla.Perfil) }
         if(state.value.conectado) {

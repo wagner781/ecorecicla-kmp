@@ -70,6 +70,8 @@ class OfflineTest {
             assertFailsWith<ErrorApi.Conflicto> { repo.sincronizar() }
             assertEquals(1,llamadas); assertEquals(-1L,local.q.pendientes().executeAsOne().id)
             assertEquals("La ruta ya esta cerrada",local.q.pendientes().executeAsOne().error)
+            repo.descartarPendiente(-1)
+            assertTrue(local.q.pendientes().executeAsList().isEmpty()); assertEquals(1,llamadas)
         } finally { http.close(); driver.close() }
     }
     @Test fun cerrarSesionLimpiaDatosDelTurno()=runTest {
@@ -79,6 +81,19 @@ class OfflineTest {
             val repo=EcoRepositoryOffline(local,EcoApi(http),seguro,reloj)
             repo.registrar(FormularioPesaje(1,"Papel",12.0,2.0,null)); repo.cerrarSesion()
             assertNull(seguro.leer()); assertNull(local.q.ruta().executeAsOneOrNull()); assertTrue(local.q.pesajes().executeAsList().isEmpty())
+        } finally { http.close(); driver.close() }
+    }
+    @Test fun supervisorCorrigeOtraRutaSinUsarEstadoDeSuRuta()=runTest {
+        val driver=driverMemoria(); val local=local(driver)
+        local.q.guardarRuta(1,"2026-10-28",1,"sincronizado")
+        local.definitivo(pe.upeu.ecorecicla.data.remote.dto.PesajeDto(17,2,1,"2026-10-28T08:00:00-05:00","Papel",20.0,2.0,18.0,"operario1"))
+        val seguro=SeguroMemoria().apply { guardar(Sesion("jwt","supervisor1","SUPERVISOR",setOf("PESAJE_EDITAR","PESAJE_ANULAR")),3600) }
+        val http=crearCliente(MockEngine { error("Debe guardar localmente") },ApiConfig("https://eco.test/api/v1/"),seguro)
+        try {
+            val repo=EcoRepositoryOffline(local,EcoApi(http),seguro,reloj)
+            repo.registrar(FormularioPesaje(1,"Papel",25.0,2.0,null),17)
+            val fila=local.q.pendientes().executeAsOne()
+            assertEquals(2L,fila.rutaId); assertEquals(25.0,fila.pesoBruto); assertEquals(18.0,fila.pesoNeto)
         } finally { http.close(); driver.close() }
     }
 }
