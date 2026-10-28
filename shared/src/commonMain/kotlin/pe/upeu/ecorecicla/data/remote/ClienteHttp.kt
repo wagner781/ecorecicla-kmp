@@ -51,4 +51,6 @@ catch(e: HttpRequestTimeoutException) { throw ErrorApi.TiempoAgotado() }
 catch(e: io.ktor.client.network.sockets.ConnectTimeoutException) { throw ErrorApi.TiempoAgotado() }
 catch(e: io.ktor.client.network.sockets.SocketTimeoutException) { throw ErrorApi.TiempoAgotado() }
 catch(e: kotlinx.serialization.SerializationException) { throw ErrorApi.Servidor() }
-catch(e: Exception) { throw ErrorApi.SinConexion() }
+catch(e: io.ktor.serialization.ContentConvertException) { throw ErrorApi.Servidor() }
+catch(e: io.ktor.utils.io.errors.IOException) { throw ErrorApi.SinConexion() }
+catch(e: Exception) { throw ErrorApi.Servidor() }

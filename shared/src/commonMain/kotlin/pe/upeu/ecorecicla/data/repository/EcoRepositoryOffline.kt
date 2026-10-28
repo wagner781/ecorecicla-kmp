@@ -10,9 +10,13 @@ import pe.upeu.ecorecicla.domain.repository.*
 
 class EcoRepositoryOffline(private val local: BaseLocal,private val api: EcoApi,private val seguro: AlmacenSeguro,private val reloj: Reloj) : EcoRepository {
     private val mutex=Mutex()
+    private var seleccion: Long?=null
+    private var fechaRutas: String?=null
     override fun puntos()=local.puntos()
     override fun pesajes()=local.pesajes()
     override fun ruta()=local.ruta()
+    override fun padron()=local.padron()
+    override fun rutas()=local.rutas()
     private fun sesion()=seguro.leer() ?: throw ErrorApi.NoAutorizado()
     private fun privilegio(p: String) { if(p !in sesion().privilegios) throw ErrorApi.SinPrivilegio("No posee $p") }
     override suspend fun registrar(formulario: FormularioPesaje,id: Long?) = mutex.withLock {
@@ -63,21 +67,58 @@ class EcoRepositoryOffline(private val local: BaseLocal,private val api: EcoApi,
                 throw e
             }
         }
-        val ruta=api.ruta()
-        val pesajes=ruta.puntos.flatMap { api.pesajes(it.id) }
+        val recibidos=descargar()
+        ResumenSync(enviados,recibidos)
+    }
+    /** Refresco de lectura: nunca envia ni descarta una operacion pendiente. */
+    override suspend fun refrescarDatos(): Int = mutex.withLock { sesion(); descargar() }
+    private suspend fun descargar(): Int {
+        val padron=api.puntos()
+        val dia=reloj.ahoraIso().substringBefore('T')
+        val actual=local.q.ruta().executeAsOneOrNull()
+        val elegida=seleccion ?: actual?.takeIf { it.fecha==dia }?.id
+        val ruta=try { if(elegida==null) api.ruta() else api.ruta(elegida) } catch(e: ErrorApi.NoEncontrado) { seleccion=null; null }
+        val fecha=fechaRutas ?: dia
+        val rutas=api.rutas(fecha)
+        val pesajes=padron.flatMap { api.pesajes(it.id) }
         local.db.transaction {
-            local.q.borrarPuntos(); local.q.borrarRuta(); local.q.borrarLimpios()
-            local.q.guardarRuta(ruta.id,ruta.fecha,if(ruta.cerrada) 1 else 0,reloj.ahoraIso())
-            ruta.puntos.forEach { local.q.guardarPunto(it.id,it.razonSocial,it.direccion,it.zona,it.materialHabitual,it.secuencia.toLong(),it.motivoOmision) }
-            pesajes.forEach { local.definitivo(it) }
+            val pendientes=local.q.pendientes().executeAsList().map { it.id }.toSet()
+            local.q.borrarPuntos(); local.q.borrarRuta(); local.q.borrarLimpios(); local.q.borrarPadron()
+            if(ruta!=null) {
+                local.q.guardarRuta(ruta.id,ruta.fecha,if(ruta.cerrada) 1 else 0,reloj.ahoraIso())
+                local.q.asignarUsuarioRuta(ruta.usuarioId,ruta.id)
+                ruta.puntos.forEach { local.q.guardarPunto(it.id,it.razonSocial,it.direccion,it.zona,it.materialHabitual,it.secuencia.toLong(),it.motivoOmision) }
+            }
+            padron.forEach { local.q.guardarPadron(it.id,it.razonSocial,it.direccion,it.zona,it.materialHabitual) }
+            pesajes.filter { it.id !in pendientes }.forEach { local.definitivo(it) }
+            local.q.borrarRutasFecha(fecha)
+            rutas.forEach { local.q.guardarRutaDisponible(it.id,it.fecha,it.usuarioId,it.usuario,if(it.cerrada) 1 else 0) }
         }
-        ResumenSync(enviados,pesajes.size)
+        return pesajes.size
+    }
+    override suspend fun cargarRutas(fecha: String) = mutex.withLock {
+        sesion()
+        val rutas=api.rutas(fecha)
+        local.db.transaction {
+            local.q.borrarRutasFecha(fecha)
+            rutas.forEach { local.q.guardarRutaDisponible(it.id,it.fecha,it.usuarioId,it.usuario,if(it.cerrada) 1 else 0) }
+        }
+        fechaRutas=fecha
+    }
+    override suspend fun seleccionarRuta(id: Long) = mutex.withLock {
+        val s=sesion()
+        if(s.privilegios.none { it=="RUTA_CERRAR" || it=="PUNTO_GESTIONAR" }) throw ErrorApi.SinPrivilegio("No puede supervisar rutas ajenas")
+        if(local.q.pendientes().executeAsList().isNotEmpty()) throw ErrorApi.Conflicto("Sincroniza o resuelve los pendientes antes de cambiar de ruta")
+        val anterior=seleccion
+        seleccion=id
+        try { descargar() } catch(e: Exception) { seleccion=anterior; throw e }
+        Unit
     }
     override suspend fun cerrarRuta() = mutex.withLock {
         privilegio("RUTA_CERRAR")
         if(local.q.pendientes().executeAsList().isNotEmpty()) throw ErrorApi.Conflicto("Sincroniza los pesajes antes de cerrar")
         val r=local.q.ruta().executeAsOneOrNull() ?: throw ErrorApi.NoEncontrado("No hay ruta")
-        api.cerrar(r.id); local.q.guardarRuta(r.id,r.fecha,1,r.ultimaSync)
+        api.cerrar(r.id); local.q.cerrarRuta(r.id)
         Unit
     }
     override suspend fun omitir(punto: Long,motivo: String) = mutex.withLock {
@@ -86,7 +127,7 @@ class EcoRepositoryOffline(private val local: BaseLocal,private val api: EcoApi,
         val r=local.q.ruta().executeAsOneOrNull() ?: throw ErrorApi.NoEncontrado("No hay ruta")
         api.omitir(r.id,punto,motivo)
     }
-    override suspend fun cerrarSesion() = mutex.withLock { seguro.borrar(); local.limpiar() }
+    override suspend fun cerrarSesion() = mutex.withLock { seguro.borrar(); local.limpiar(); seleccion=null; fechaRutas=null }
     override suspend fun descartarPendiente(id: Long) = mutex.withLock {
         sesion()
         if(local.q.pendientes().executeAsList().none { it.id==id }) throw ErrorApi.Conflicto("Solo se descartan cambios pendientes")

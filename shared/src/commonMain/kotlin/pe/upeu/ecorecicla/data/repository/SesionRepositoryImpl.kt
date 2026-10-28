@@ -16,7 +16,7 @@ class SesionRepositoryImpl(private val api: EcoApi,private val seguro: AlmacenSe
         val perfil=api.me()
         val sesion=actual() ?: throw ErrorApi.NoAutorizado()
         // No se vuelve a guardar el token: consultar perfil no prolonga la hora de vigencia.
-        return sesion.copy(usuario=perfil.usuario,rol=perfil.rol,privilegios=perfil.privilegios)
+        return sesion.copy(usuario=perfil.usuario,rol=perfil.rol,privilegios=perfil.privilegios,id=perfil.id,nombre=perfil.nombre)
     }
     override suspend fun cerrar()=datos.cerrarSesion()
 }
