@@ -34,4 +34,11 @@ class ClienteTest {
         val client=crearCliente(MockEngine { respond("{}",HttpStatusCode.Unauthorized,headersOf(HttpHeaders.ContentType,"application/json")) },ApiConfig("https://eco.test/api/v1/"),seguro)
         try { assertFailsWith<ErrorApi.NoAutorizado> { EcoApi(client).me() }; assertNull(seguro.leer()) } finally { client.close() }
     }
+    @Test fun loginIncorrectoConservaMensajeDeCredenciales()=runTest {
+        val client=crearCliente(MockEngine { respond("""{"status":401,"message":"Credenciales incorrectas"}""",HttpStatusCode.Unauthorized,headersOf(HttpHeaders.ContentType,"application/json")) },ApiConfig("https://eco.test/api/v1/"),SeguroMemoria())
+        try {
+            val error=assertFailsWith<ErrorApi.CredencialesIncorrectas> { EcoApi(client).login("operario1","incorrecta") }
+            assertEquals("Credenciales incorrectas",error.message)
+        } finally { client.close() }
+    }
 }
