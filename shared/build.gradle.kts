@@ -13,6 +13,7 @@ kotlin {
             implementation("io.insert-koin:koin-core:4.1.1")
             implementation("app.cash.sqldelight:runtime:2.1.0")
             implementation("app.cash.sqldelight:coroutines-extensions:2.1.0")
+            implementation("androidx.lifecycle:lifecycle-viewmodel:2.9.4")
         }
         commonTest.dependencies { implementation(kotlin("test")); implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2"); implementation("io.ktor:ktor-client-mock:3.3.1") }
         jvmTest.dependencies { implementation("app.cash.sqldelight:sqlite-driver:2.1.0") }
