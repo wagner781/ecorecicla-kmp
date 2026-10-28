@@ -44,7 +44,7 @@ text('<link href="https://github.com/wagner781/ecoapi-backend">github.com/wagner
 data = [["Comprobacion", "Resultado observado"],
         ["Compilacion inicial y final", "JAR Spring Boot y APK Android generados"],
         ["Pruebas Spring/MockMvc", "13 casos, cero fallos"],
-        ["Pruebas commonTest", "8 casos en JVM y unitarias Android debug/release"],
+        ["Pruebas commonTest", "9 casos en JVM y unitarias Android debug/release"],
         ["API real con PostgreSQL", "20 peticiones HTTP aprobadas"],
         ["Modo avion", "Registro local #-1, pendiente de envio"],
         ["Reinicio y reconexion", "Sustitucion por #17; una sola fila PostgreSQL"],
@@ -57,7 +57,7 @@ text("Los graficos Git se exportaron antes del commit de evidencias y de la fusi
 
 pair("Inicio de sesion y ruta", "login.png", "ruta.png", "Izquierda: formulario real de autenticacion. Derecha: ruta descargada del servicio y observada desde SQLite; se muestra la fecha y la ultima sincronizacion.")
 pair("Modo avion y sincronizacion", "offline.png", "sincronizado.png", "Izquierda: modo avion, sin conexion, registro #-1 pendiente. Derecha: el mismo registro tras reinicio y reconexion automatica, ID #17 y neto 30 kg calculado por el servicio. Se verifico una unica fila tanto en SQLite como en PostgreSQL.")
-pair("Validacion y privilegios", "validacion.png", "perfil.png", "Izquierda: tara mayor al bruto, error bajo el campo y sin escritura. Derecha: perfil real del operario con sus privilegios; no posee PESAJE_ANULAR ni RUTA_CERRAR. El servidor tambien los verifica, como muestra la siguiente pagina.")
+pair("Validacion y privilegios", "validacion.png", "perfil.png", "Izquierda: respuesta 400 real del servidor por material mayor a 80 caracteres. Se reabre el formulario con el mensaje bajo Material y se conserva el pendiente para corregirlo. Derecha: perfil del operario; no posee PESAJE_ANULAR ni RUTA_CERRAR. El servidor tambien los verifica.")
 story.append(PageBreak()); text("Rechazo real del servicio", "TitleEco")
 story.append(image_fit("rechazo-403.png",486,440)); story.append(Spacer(1,14))
 text("Captura del cliente de verificacion mostrando la respuesta HTTP real a DELETE /api/v1/pesajes/17 con token valido de operario1. Se oculta el token. El resultado 403 prueba que la proteccion esta en el servidor, aunque la peticion se realice fuera de la aplicacion. La fila no se anulo.")

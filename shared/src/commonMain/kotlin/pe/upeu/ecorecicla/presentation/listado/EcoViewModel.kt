@@ -43,7 +43,11 @@ class EcoViewModel(private val repo: EcoRepository,private val api: EcoApi,priva
                 if(e is ErrorApi.NoAutorizado) {
                     repo.cerrarSesion()
                     mutable.update { UiState(mensaje=e.message,conectado=it.conectado) }
-                } else mutable.update { it.copy(mensaje=e.message,campos=(e as? ErrorApi.Validacion)?.campos.orEmpty(),reintentar=e is ErrorApi.Servidor || e is ErrorApi.SinConexion || e is ErrorApi.TiempoAgotado) }
+                } else mutable.update {
+                    val validacion=e as? ErrorApi.Validacion
+                    val pantalla=if(validacion?.puntoId!=null && validacion.pesajeId!=null) Pantalla.Formulario(validacion.puntoId,validacion.pesajeId) else it.pantalla
+                    it.copy(pantalla=pantalla,mensaje=e.message,campos=validacion?.campos.orEmpty(),reintentar=e is ErrorApi.Servidor || e is ErrorApi.SinConexion || e is ErrorApi.TiempoAgotado)
+                }
             }
             catch(e: Exception) { mutable.update { it.copy(mensaje="No se pudo completar la operacion",reintentar=true) } }
             finally { mutable.update { it.copy(cargando=false) } }

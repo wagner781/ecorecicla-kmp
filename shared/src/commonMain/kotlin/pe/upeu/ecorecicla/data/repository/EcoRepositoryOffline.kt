@@ -57,7 +57,11 @@ class EcoRepositoryOffline(private val local: BaseLocal,private val api: EcoApi,
                     "ANULAR" -> { api.anular(p.pesaje.id,(p.pesaje.estado as EstadoPesaje.Anulado).motivo); local.guardar(p.copy(pesaje=p.pesaje.copy(pendiente=false),operacion="",error=null)) }
                 }
                 enviados++
-            } catch(e: ErrorApi) { if(e !is ErrorApi.NoAutorizado) local.q.errorPendiente(e.message,p.pesaje.id); throw e }
+            } catch(e: ErrorApi) {
+                if(e !is ErrorApi.NoAutorizado) local.q.errorPendiente(e.message,p.pesaje.id)
+                if(e is ErrorApi.Validacion) throw ErrorApi.Validacion(e.campos,e.message.orEmpty(),p.pesaje.id,p.pesaje.puntoId)
+                throw e
+            }
         }
         val ruta=api.ruta()
         val pesajes=ruta.puntos.flatMap { api.pesajes(it.id) }

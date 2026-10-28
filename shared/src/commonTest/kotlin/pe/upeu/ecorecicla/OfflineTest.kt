@@ -96,4 +96,16 @@ class OfflineTest {
             assertEquals(2L,fila.rutaId); assertEquals(25.0,fila.pesoBruto); assertEquals(18.0,fila.pesoNeto)
         } finally { http.close(); driver.close() }
     }
+    @Test fun validacionDelServidorConservaCamposYRegistroParaReabrirFormulario()=runTest {
+        val driver=driverMemoria(); val local=local(driver); val seguro=seguro()
+        val http=crearCliente(MockEngine { respond("""{"status":400,"message":"Datos invalidos","validationErrors":{"material":"Maximo 80 caracteres"}}""",HttpStatusCode.BadRequest,headersOf(HttpHeaders.ContentType,"application/json")) },ApiConfig("https://eco.test/api/v1/"),seguro)
+        try {
+            val repo=EcoRepositoryOffline(local,EcoApi(http),seguro,reloj)
+            repo.registrar(FormularioPesaje(1,"P".repeat(81),20.0,2.0,null))
+            val error=assertFailsWith<ErrorApi.Validacion> { repo.sincronizar() }
+            assertEquals(-1L,error.pesajeId); assertEquals(1L,error.puntoId)
+            assertEquals("Maximo 80 caracteres",error.campos["material"])
+            assertEquals(-1L,local.q.pendientes().executeAsOne().id)
+        } finally { http.close(); driver.close() }
+    }
 }
