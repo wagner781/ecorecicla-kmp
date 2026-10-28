@@ -103,6 +103,7 @@ import java.time.ZoneId
         item {
             Text("Ruta del dia",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
             Text(s.ruta?.let { "${it.fecha} · ${if(it.cerrada) "Cerrada" else "Abierta"}" } ?: "Sin ruta descargada")
+            s.ruta?.let { r -> Text("Ruta #${r.id} · ${s.rutas.find { it.id==r.id }?.usuario ?: "Usuario #${r.usuarioId}"}",style=MaterialTheme.typography.bodySmall) }
             if(s.sesion?.privilegios?.contains("PUNTO_GESTIONAR")==true && s.ruta?.cerrada==false) TextButton(onClick={vm.navegar(Pantalla.Asignacion(s.ruta?.id))},enabled=!s.cargando) { Text("Editar planificacion") }
             Text("Ultima sincronizacion: ${s.ruta?.ultimaSync ?: "Todavia no se sincroniza"}",style=MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(12.dp))
@@ -119,7 +120,7 @@ import java.time.ZoneId
                 Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                     Text("${p.secuencia.toString().padStart(2,'0')}  ${p.razonSocial}",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
                     Text(p.direccion); Text("${p.zona} · ${p.materialHabitual}",style=MaterialTheme.typography.bodySmall)
-                    Text(if(p.atendido) "Con pesaje" else "Pendiente de pesar",color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.SemiBold)
+                    Text(when { p.atendido -> "Con pesaje"; !p.motivoOmision.isNullOrBlank() -> "Omitido: ${p.motivoOmision}"; else -> "Pendiente de pesar" },color=MaterialTheme.colorScheme.primary,fontWeight=FontWeight.SemiBold)
                 }
             }
         }
