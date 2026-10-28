@@ -1,0 +1,48 @@
+*   bea164b (tag: v1.2.1-unidad2, origin/main, origin/HEAD, main) Merge pull request #19 from wagner781/develop
+|\  
+| *   02beb2a (HEAD -> develop, origin/develop) Merge pull request #18 from wagner781/docs/entrega-parte2
+| |\  
+| | * 6423190 (origin/docs/entrega-parte2, docs/entrega-parte2) docs(entrega): actualizar cuentas y verificacion del contrato final
+| |/  
+* | 4e89819 (tag: v1.2-unidad2) Merge pull request #17 from wagner781/develop
+|\| 
+| *   e20b651 Merge pull request #16 from wagner781/sc-c-qquerar
+| |\  
+| | * 6aeafae (origin/sc-c-qquerar, sc-c-qquerar) test(sc-c): verificar humedad persistida limites y compatibilidad
+| | * 1a70264 feat(sc-c): validar y persistir humedad en altas correcciones y semillas
+| | * 1de8607 feat(sc-c): extender contrato y PostgreSQL con humedad opcional
+| |/  
+| *   130cb4a Merge pull request #15 from wagner781/sc-b-qquerar
+| |\  
+| | * 0dade71 (origin/sc-b-qquerar, sc-b-qquerar) docs(sc-b): exportar comprobacion real del auditor y explicar sus permisos
+| | * 6c51a6f test(sc-b): rechazar todas las escrituras del auditor y conservar lectura
+| | * 14482c1 feat(sc-b): configurar auditor con privilegios exclusivos de lectura
+| |/  
+* | 4b6d0ac (tag: v1.1-parte1) Merge pull request #14 from wagner781/develop
+|\| 
+| *   25ae825 Merge pull request #13 from wagner781/fix/ejecucion-documentacion-parte1
+| |\  
+| | * d04e06c (origin/fix/ejecucion-documentacion-parte1, fix/ejecucion-documentacion-parte1) docs(api): exportar peticiones verificadas y explicar administración completa
+| | * 2b3e60b fix(entrega): comunicar expiración exacta y repetir compilación con caché
+| |/  
+| *   d5c56ea Integrar administración y selección de rutas
+| |\  
+| | * a64d4e6 (origin/feature/administracion-parte1, feature/administracion-parte1) feat(rutas): supervisar asignaciones y mantener padrón con historial
+| | * 76215d3 feat(administracion): gestionar usuarios y roles por privilegio
+| | * 8d1f9f6 feat(cuentas): persistir roles y revocar sesiones tras cambios de cuenta
+| |/  
+| *   35d14d6 Integrar correcciones de contrato y pesajes
+| |\  
+| | * cd787b9 (origin/fix/contrato-reglas-parte1, fix/contrato-reglas-parte1) fix(pesajes): calcular neto en servicio y permitir anulación autorizada
+| | * 563fb8b fix(errores): responder 404 y 405 sin convertirlos en 500
+| |/  
+* | 4a329f6 (tag: v1.0-unidad2) Merge pull request #8 from wagner781/develop
+|\| 
+| *   15152cb Merge pull request #7 from wagner781/fix/vencimiento-jwt
+| |\  
+| | * 68e0423 (origin/fix/vencimiento-jwt, fix/vencimiento-jwt) fix(jwt): rechazar tokens desde su instante de vencimiento
+| |/  
+| *   1e8899c Merge pull request #6 from wagner781/feature/pruebas-documentacion
+| |\  
+| | * 99de008 (origin/feature/pruebas-documentacion, feature/pruebas-documentacion) test(api): verificar contrato HTTP contra PostgreSQL y documentar defensa
+| |/
