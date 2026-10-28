@@ -115,7 +115,15 @@ import java.time.ZoneId
             }
         }
         if(s.puntos.isEmpty() && !s.cargando) item { Text("Aun no hay puntos. Sincroniza con conexion para descargar tu ruta.") }
-        items(s.puntos,key={it.id}) { p ->
+        item {
+            OutlinedTextField(value=s.busquedaRuta,onValueChange=vm::buscarRuta,label={Text("Buscar en mi ruta")},singleLine=true,modifier=Modifier.fillMaxWidth())
+            Row(verticalAlignment=Alignment.CenterVertically) {
+                Switch(checked=s.soloPendientes,onCheckedChange=vm::mostrarSoloPendientes)
+                Text("Solo pendientes de pesar",modifier=Modifier.padding(start=8.dp))
+            }
+            if(s.puntos.isNotEmpty() && s.puntosVisibles.isEmpty()) Text("No hay puntos que coincidan con los filtros.")
+        }
+        items(s.puntosVisibles,key={it.id}) { p ->
             Card(onClick={vm.navegar(Pantalla.Detalle(p.id))},modifier=Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                     Text("${p.secuencia.toString().padStart(2,'0')}  ${p.razonSocial}",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
