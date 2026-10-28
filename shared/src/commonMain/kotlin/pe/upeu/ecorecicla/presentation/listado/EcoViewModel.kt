@@ -4,8 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import pe.upeu.ecorecicla.data.local.AlmacenSeguro
-import pe.upeu.ecorecicla.data.remote.EcoApi
 import pe.upeu.ecorecicla.domain.model.*
 import pe.upeu.ecorecicla.domain.repository.*
 import pe.upeu.ecorecicla.domain.usecase.*
@@ -13,8 +11,10 @@ import pe.upeu.ecorecicla.presentation.navigation.Pantalla
 
 data class UiState(val sesion: Sesion?=null,val puntos: List<PuntoAcopio> = emptyList(),val pesajes: List<Registro> = emptyList(),val ruta: RutaLocal?=null,val pantalla: Pantalla=Pantalla.Ruta,val cargando: Boolean=false,val mensaje: String?=null,val campos: Map<String,String> = emptyMap(),val reintentar: Boolean=false,val conectado: Boolean=false)
 
-class EcoViewModel(private val repo: EcoRepository,private val api: EcoApi,private val seguro: AlmacenSeguro,private val sync: SincronizarUseCase,private val registrar: RegistrarPesajeUseCase,conectividad: Flow<Boolean>) : ViewModel() {
-    private val mutable=MutableStateFlow(UiState(sesion=seguro.leer()))
+class EcoViewModel(private val repo: EcoRepository,private val iniciar: IniciarSesionUseCase,private val consultar: ConsultarSesionUseCase,private val cerrar: CerrarSesionUseCase,private val sync: SincronizarUseCase,private val registrar: RegistrarPesajeUseCase,conectividad: Flow<Boolean>) : ViewModel() {
+    private val mutable=MutableStateFlow(UiState(sesion=consultar.actual()))
+    private var ultimaOperacion: (suspend () -> Unit)?=null
+    private var reintentoAlternativo: (suspend () -> Unit)?=null
     val state: StateFlow<UiState> = mutable.asStateFlow()
     init {
         viewModelScope.launch {
@@ -23,7 +23,7 @@ class EcoViewModel(private val repo: EcoRepository,private val api: EcoApi,priva
         viewModelScope.launch {
             conectividad.distinctUntilChanged().collect { online ->
                 mutable.update { it.copy(conectado=online) }
-                if(online && seguro.leer()!=null) sincronizar()
+                if(online && consultar.actual()!=null) sincronizar()
             }
         }
         viewModelScope.launch {
@@ -31,35 +31,38 @@ class EcoViewModel(private val repo: EcoRepository,private val api: EcoApi,priva
         }
     }
     fun verificarSesion() {
-        if(state.value.sesion!=null && seguro.leer()==null) ejecutar { repo.cerrarSesion(); mutable.update { UiState(mensaje="Tu sesion vencio",conectado=it.conectado) } }
+        if(state.value.sesion!=null && consultar.actual()==null) ejecutar { cerrar(); mutable.update { UiState(mensaje="Tu sesion vencio",conectado=it.conectado) } }
     }
     private fun ejecutar(block: suspend () -> Unit) {
         if(state.value.cargando) return
+        reintentoAlternativo=null
         mutable.update { it.copy(cargando=true,mensaje=null,campos=emptyMap(),reintentar=false) }
         viewModelScope.launch {
-            try { block() }
+            try { block(); ultimaOperacion=null }
             catch(e: CancellationException) { throw e }
             catch(e: ErrorApi) {
                 if(e is ErrorApi.NoAutorizado) {
-                    repo.cerrarSesion()
+                    cerrar()
                     mutable.update { UiState(mensaje=e.message,conectado=it.conectado) }
                 } else mutable.update {
                     val validacion=e as? ErrorApi.Validacion
                     val pantalla=if(validacion?.puntoId!=null && validacion.pesajeId!=null) Pantalla.Formulario(validacion.puntoId,validacion.pesajeId) else it.pantalla
-                    it.copy(pantalla=pantalla,mensaje=e.message,campos=validacion?.campos.orEmpty(),reintentar=e is ErrorApi.Servidor || e is ErrorApi.SinConexion || e is ErrorApi.TiempoAgotado)
+                    val recuperable=e is ErrorApi.Servidor || e is ErrorApi.SinConexion || e is ErrorApi.TiempoAgotado
+                    ultimaOperacion=if(recuperable) reintentoAlternativo ?: block else null
+                    it.copy(pantalla=pantalla,mensaje=e.message,campos=validacion?.campos.orEmpty(),reintentar=recuperable)
                 }
             }
-            catch(e: Exception) { mutable.update { it.copy(mensaje="No se pudo completar la operacion",reintentar=true) } }
+            catch(e: Exception) { ultimaOperacion=reintentoAlternativo ?: block; mutable.update { it.copy(mensaje="No se pudo completar la operacion",reintentar=true) } }
             finally { mutable.update { it.copy(cargando=false) } }
         }
     }
     fun login(usuario: String,password: String)=ejecutar {
-        val sesion=api.login(usuario,password)
-        repo.cerrarSesion()
-        seguro.guardar(sesion.dominio(),sesion.expiresIn)
-        mutable.update { it.copy(sesion=sesion.dominio(),pantalla=Pantalla.Ruta) }
+        val sesion=iniciar(usuario,password)
+        mutable.update { it.copy(sesion=sesion,pantalla=Pantalla.Ruta) }
+        reintentoAlternativo={ val resultado=sync(); mutable.update { it.copy(mensaje="${resultado.recibidos} pesajes recibidos") } }
         val resultado=sync(); mutable.update { it.copy(mensaje="${resultado.recibidos} pesajes recibidos") }
     }
+    fun reintentar() { ultimaOperacion?.let { ejecutar(it) } }
     fun navegar(pantalla: Pantalla) { mutable.update { it.copy(pantalla=pantalla,mensaje=null,campos=emptyMap(),reintentar=false) } }
     fun sincronizar()=ejecutar {
         val resultado=sync()
@@ -86,9 +89,8 @@ class EcoViewModel(private val repo: EcoRepository,private val api: EcoApi,priva
     fun perfil()=ejecutar {
         mutable.update { it.copy(pantalla=Pantalla.Perfil) }
         if(state.value.conectado) {
-            val user=api.me(); val session=seguro.leer() ?: throw ErrorApi.NoAutorizado()
-            mutable.update { it.copy(sesion=session.copy(usuario=user.usuario,rol=user.rol,privilegios=user.privilegios)) }
+            val session=consultar(); mutable.update { it.copy(sesion=session) }
         }
     }
-    fun salir()=ejecutar { repo.cerrarSesion(); mutable.update { UiState(conectado=it.conectado) } }
+    fun salir()=ejecutar { cerrar(); mutable.update { UiState(conectado=it.conectado) } }
 }
