@@ -14,13 +14,14 @@ data class UiState(
     val ruta: RutaLocal?=null,val pantalla: Pantalla=Pantalla.Ruta,val cargando: Boolean=false,
     val mensaje: String?=null,val campos: Map<String,String> = emptyMap(),val reintentar: Boolean=false,val conectado: Boolean=false,
     val padron: List<PuntoAcopio> = emptyList(),val padronVisible: List<PuntoAcopio> = emptyList(),val zona: String="",
-    val rutas: List<RutaResumen> = emptyList(),val rutasVisibles: List<RutaResumen> = emptyList(),val fechaRutas: String=""
+    val rutas: List<RutaResumen> = emptyList(),val rutasVisibles: List<RutaResumen> = emptyList(),val fechaRutas: String="",
+    val busquedaRuta: String="",val soloPendientes: Boolean=false,val puntosVisibles: List<PuntoAcopio> = emptyList()
 )
 
 class EcoViewModel(
     private val repo: EcoRepository,private val iniciar: IniciarSesionUseCase,private val consultar: ConsultarSesionUseCase,
     private val cerrar: CerrarSesionUseCase,private val sync: SincronizarUseCase,private val registrar: RegistrarPesajeUseCase,
-    conectividad: Flow<Boolean>,private val catalogo: CatalogoUseCases
+    conectividad: Flow<Boolean>,private val catalogo: CatalogoUseCases,private val filtrarRuta: FiltrarRutaUseCase=FiltrarRutaUseCase()
 ) : ViewModel() {
     private fun inicio(sesion: Sesion?)=if(sesion!=null && "PESAJE_CREAR" !in sesion.privilegios) Pantalla.Padron else Pantalla.Ruta
     private val mutable=MutableStateFlow(UiState(sesion=consultar.actual(),pantalla=inicio(consultar.actual()),fechaRutas=catalogo.hoy()))
@@ -31,7 +32,7 @@ class EcoViewModel(
         viewModelScope.launch { consultar.observar().collect { s ->
             if(s==null && state.value.sesion!=null) mutable.update { UiState(conectado=it.conectado,fechaRutas=catalogo.hoy()) }
         } }
-        viewModelScope.launch { combine(repo.puntos(),repo.pesajes(),repo.ruta()) { p,w,r -> Triple(p,w,r) }.collect { (p,w,r) -> mutable.update { it.copy(puntos=p,pesajes=w,ruta=r) } } }
+        viewModelScope.launch { combine(repo.puntos(),repo.pesajes(),repo.ruta()) { p,w,r -> Triple(p,w,r) }.collect { (p,w,r) -> mutable.update { it.copy(puntos=p,pesajes=w,ruta=r,puntosVisibles=filtrarRuta(p,it.busquedaRuta,it.soloPendientes)) } } }
         viewModelScope.launch { repo.padron().collect { p -> mutable.update { it.copy(padron=p,padronVisible=catalogo.filtrar(p,it.zona)) } } }
         viewModelScope.launch { repo.rutas().collect { r -> mutable.update { it.copy(rutas=r,rutasVisibles=catalogo.porFecha(r,it.fechaRutas)) } } }
         viewModelScope.launch {
@@ -112,6 +113,8 @@ class EcoViewModel(
         mutable.update { it.copy(mensaje="Cambio local descartado. Los datos del servidor se conservan") }
     }
     fun filtrarZona(zona: String) { mutable.update { it.copy(zona=zona,padronVisible=catalogo.filtrar(it.padron,zona)) } }
+    fun buscarRuta(texto: String) { mutable.update { it.copy(busquedaRuta=texto,puntosVisibles=filtrarRuta(it.puntos,texto,it.soloPendientes)) } }
+    fun mostrarSoloPendientes(activo: Boolean) { mutable.update { it.copy(soloPendientes=activo,puntosVisibles=filtrarRuta(it.puntos,it.busquedaRuta,activo)) } }
     fun cargarRutas(fecha: String)=ejecutar {
         catalogo.cargar(fecha)
         mutable.update { it.copy(fechaRutas=fecha,rutasVisibles=catalogo.porFecha(it.rutas,fecha)) }
